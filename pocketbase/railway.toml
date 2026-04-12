@@ -2,5 +2,6 @@
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "/pb/pocketbase serve --http=0.0.0.0:8090"
 healthcheckPath = "/api/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
