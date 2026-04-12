@@ -2,5 +2,5 @@
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "/pb/pocketbase serve --http=0.0.0.0:8090"
+startCommand = "/pocketbase serve --http=0.0.0.0:8090"
 healthcheckPath = "/api/health"
