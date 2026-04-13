@@ -1,3 +1,8 @@
 FROM ghcr.io/muchobien/pocketbase:latest
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 8090
-CMD ["--http=0.0.0.0:8090"]
+
+ENTRYPOINT ["/start.sh"]
