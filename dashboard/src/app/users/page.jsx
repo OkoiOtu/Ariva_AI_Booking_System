@@ -169,7 +169,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div style={{ maxWidth:760, margin:'0 auto' }}>
+    <div style={{ maxWidth:860, margin:'0 auto' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
         <div>
           <h1 style={{ fontSize:20, fontWeight:500 }}>Users</h1>
@@ -198,11 +198,11 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div className="users-table-wrap" style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', overflow:'hidden' }}>
+      <div className="users-table-wrap" style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)' }}>
         {loading ? (
           <p style={{ padding:24, color:'var(--muted)' }}>Loading...</p>
         ) : (
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', minWidth:780 }}>
             <thead>
               <tr style={{ borderBottom:'0.5px solid var(--border)' }}>
                 {['User','Email','Role','Status','Joined',...(isAdmin ? ['Actions'] : [])].map(h => (
