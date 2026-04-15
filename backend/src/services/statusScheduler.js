@@ -1,6 +1,7 @@
 import { getClient } from './pbService.js';
 import { logActivity } from './activityLogger.js';
 import { syncDriverStatuses } from './driverService.js';
+import { sendReminders } from './reminderService.js';
 
 /**
  * Runs every 60 seconds and auto-advances booking statuses:
@@ -61,6 +62,9 @@ async function tick() {
         console.info(`[scheduler] ${b.reference} → completed`);
       }
     }
+
+    // Send 1-hour pickup reminders
+    await sendReminders();
 
     // Sync driver statuses with booking statuses
     await syncDriverStatuses();

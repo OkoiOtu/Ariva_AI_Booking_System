@@ -15,6 +15,7 @@ const ACTION_LABELS = {
   logout:            { label: 'Logout',              color: 'var(--gray)',    bg: 'var(--gray-bg)',    icon: 'logout'           },
   driver_assigned:   { label: 'Driver assigned',    color: 'var(--blue)',    bg: 'var(--blue-bg)',    icon: 'assignment_ind'   },
   driver_unassigned: { label: 'Driver unassigned',  color: 'var(--gray)',    bg: 'var(--gray-bg)',    icon: 'person_remove'    },
+  reminder_sent:     { label: 'Reminder sent',      color: 'var(--blue)',    bg: 'var(--blue-bg)',    icon: 'notifications'    },
 };
 
 const FILTERS = [
