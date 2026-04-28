@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-const PB = () => process.env.NEXT_PUBLIC_PB_URL;
+import { api } from '@/lib/api';
 
 const PAGE_STYLE = { minHeight:'100vh', background:'#0a0a0f', color:'#fff', fontFamily:'DM Sans, sans-serif', display:'flex', flexDirection:'column' };
 const GRID_BG    = { position:'fixed', inset:0, zIndex:0, pointerEvents:'none', backgroundImage:'linear-gradient(rgba(108,99,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.04) 1px,transparent 1px)', backgroundSize:'60px 60px' };
@@ -18,13 +17,12 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (!token) { setStatus('error'); return; }
 
-    fetch(`${PB()}/api/collections/users/confirm-verification`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ token }),
-    })
-    .then(res => setStatus(res.ok ? 'success' : 'error'))
-    .catch(() => setStatus('error'));
+    api(`/auth/verify-email?token=${encodeURIComponent(token)}`)
+      .then(async res => {
+        if (res.ok) setStatus('success');
+        else        setStatus('error');
+      })
+      .catch(() => setStatus('error'));
   }, [token]);
 
   return (

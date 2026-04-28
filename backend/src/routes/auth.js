@@ -1,16 +1,48 @@
-import express from 'express';
-import { getClient } from '../services/pbService.js';
-import { logActivity } from '../services/activityLogger.js';
+import express  from 'express';
+import crypto   from 'crypto';
+import { getClient }              from '../services/pbService.js';
+import { logActivity }            from '../services/activityLogger.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
 const esc = v => String(v ?? '').replace(/"/g, '');
 
-/**
- * POST /auth/register
- * Creates a new user + company. Called from the signup page.
- * Uses the backend's admin PocketBase client so user creation works.
- */
+// ---------------------------------------------------------------------------
+// HMAC-signed stateless tokens — no DB storage, no SMTP dependency
+// Token format: base64url(JSON payload) + '.' + hex(HMAC-SHA256)
+// ---------------------------------------------------------------------------
+const secret = () => process.env.JWT_SECRET ?? process.env.RESEND_API_KEY ?? 'changeme-set-JWT_SECRET';
+
+function signToken(payload, expiresInMs) {
+  const data   = JSON.stringify({ ...payload, exp: Date.now() + expiresInMs });
+  const b64    = Buffer.from(data).toString('base64url');
+  const sig    = crypto.createHmac('sha256', secret()).update(b64).digest('hex');
+  return `${b64}.${sig}`;
+}
+
+function verifyToken(token) {
+  const parts = (token ?? '').split('.');
+  if (parts.length !== 2) throw new Error('Invalid token');
+  const [b64, sig] = parts;
+  let data;
+  try { data = Buffer.from(b64, 'base64url').toString(); } catch { throw new Error('Invalid token'); }
+  const expected = crypto.createHmac('sha256', secret()).update(b64).digest('hex');
+  // Constant-time compare (both are hex strings of equal length)
+  if (sig.length !== expected.length ||
+      !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+    throw new Error('Invalid token');
+  }
+  let payload;
+  try { payload = JSON.parse(data); } catch { throw new Error('Invalid token'); }
+  if (!payload.exp || payload.exp < Date.now()) throw new Error('Token has expired');
+  return payload;
+}
+
+// ---------------------------------------------------------------------------
+// POST /auth/register
+// Creates a new user + company and sends a verification email via Resend.
+// ---------------------------------------------------------------------------
 router.post('/register', async (req, res) => {
   try {
     const pb = await getClient();
@@ -59,9 +91,10 @@ router.post('/register', async (req, res) => {
       verified:        false,
     }, { requestKey: null });
 
-    // 5. Send verification email
+    // 5. Send verification email via Resend (bypasses SMTP entirely)
     try {
-      await pb.collection('users').requestVerification(email);
+      const token = signToken({ userId: user.id, email, type: 'verify' }, 24 * 60 * 60 * 1000);
+      await sendVerificationEmail(email, name, token);
     } catch (err) {
       console.warn('[auth/register] verification email failed:', err.message);
     }
@@ -76,15 +109,14 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('[auth/register] error:', err.message);
-    // Return the actual PocketBase error so the frontend can show it
     res.status(500).json({ error: err.message ?? 'Registration failed. Please try again.' });
   }
 });
 
-/**
- * GET /auth/check-email?email=...
- * Returns { exists: true/false } — used for real-time email availability check on signup.
- */
+// ---------------------------------------------------------------------------
+// GET /auth/check-email?email=...
+// Returns { exists: true/false } — real-time check on signup form.
+// ---------------------------------------------------------------------------
 router.get('/check-email', async (req, res) => {
   const email = String(req.query.email ?? '').trim();
   if (!email.includes('@')) return res.json({ exists: false });
@@ -98,14 +130,14 @@ router.get('/check-email', async (req, res) => {
     }
   } catch (err) {
     console.error('[auth/check-email] error:', err.message);
-    res.json({ exists: false }); // fail open — /register will catch it on submit
+    res.json({ exists: false }); // fail open — /register catches it on submit
   }
 });
 
-/**
- * GET /auth/check-slug?slug=...
- * Returns { exists: true/false } — used for real-time slug availability check on signup.
- */
+// ---------------------------------------------------------------------------
+// GET /auth/check-slug?slug=...
+// Returns { exists: true/false } — real-time check on signup form.
+// ---------------------------------------------------------------------------
 router.get('/check-slug', async (req, res) => {
   const slug = String(req.query.slug ?? '').trim();
   if (!slug) return res.json({ exists: false });
@@ -119,35 +151,117 @@ router.get('/check-slug', async (req, res) => {
     }
   } catch (err) {
     console.error('[auth/check-slug] error:', err.message);
-    res.json({ exists: false }); // fail open — /register will catch it on submit
+    res.json({ exists: false }); // fail open — /register catches it on submit
   }
 });
 
-/**
- * POST /auth/resend-verification
- * Resends email verification link to an existing user email.
- * Returns a generic success response to avoid leaking account existence.
- */
+// ---------------------------------------------------------------------------
+// POST /auth/resend-verification
+// Generates a new verification token and resends via Resend.
+// ---------------------------------------------------------------------------
 router.post('/resend-verification', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !String(email).includes('@')) {
+    return res.status(400).json({ error: 'A valid email is required.' });
+  }
   try {
     const pb = await getClient();
-    const { email } = req.body;
-
-    if (!email || !String(email).includes('@')) {
-      return res.status(400).json({ error: 'A valid email is required.' });
-    }
-
+    let user;
     try {
-      await pb.collection('users').requestVerification(email);
-    } catch (err) {
-      // Keep response generic even if email doesn't exist or send fails
-      console.warn('[auth/resend-verification] request failed:', err.message);
+      user = await pb.collection('users').getFirstListItem(`email = "${esc(email)}"`, { requestKey: null });
+    } catch { /* user not found — return generic success below */ }
+
+    if (user && !user.verified) {
+      try {
+        const token = signToken({ userId: user.id, email, type: 'verify' }, 24 * 60 * 60 * 1000);
+        await sendVerificationEmail(email, user.full_name ?? '', token);
+      } catch (err) {
+        console.warn('[auth/resend-verification] email failed:', err.message);
+      }
     }
 
-    res.json({ success: true, message: 'If this email exists, a verification link has been sent.' });
+    res.json({ success: true, message: 'If this email exists and is unverified, a verification link has been sent.' });
   } catch (err) {
     console.error('[auth/resend-verification] error:', err.message);
     res.status(500).json({ error: 'Could not process verification resend right now.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /auth/verify-email?token=...
+// Verifies the signed token and marks the user as verified in PocketBase.
+// Called by the dashboard /verify-email page after the user clicks the link.
+// ---------------------------------------------------------------------------
+router.get('/verify-email', async (req, res) => {
+  const token = String(req.query.token ?? '');
+  try {
+    const { userId, type } = verifyToken(token);
+    if (type !== 'verify') return res.status(400).json({ error: 'Invalid token type.' });
+    const pb = await getClient();
+    await pb.collection('users').update(userId, { verified: true }, { requestKey: null });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message ?? 'Verification failed. The link may have expired.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /auth/request-password-reset
+// Generates a reset token and sends it via Resend.
+// Always returns success to prevent email enumeration.
+// ---------------------------------------------------------------------------
+router.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !String(email).includes('@')) {
+    return res.status(400).json({ error: 'A valid email is required.' });
+  }
+  try {
+    const pb = await getClient();
+    let user;
+    try {
+      user = await pb.collection('users').getFirstListItem(`email = "${esc(email)}"`, { requestKey: null });
+    } catch { /* not found — return generic success */ }
+
+    if (user) {
+      try {
+        const token = signToken({ userId: user.id, email, type: 'reset' }, 60 * 60 * 1000);
+        await sendPasswordResetEmail(email, user.full_name ?? '', token);
+      } catch (err) {
+        console.warn('[auth/request-password-reset] email failed:', err.message);
+      }
+    }
+
+    res.json({ success: true, message: 'If an account with this email exists, a reset link has been sent.' });
+  } catch (err) {
+    console.error('[auth/request-password-reset] error:', err.message);
+    res.status(500).json({ error: 'Could not process password reset right now.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /auth/confirm-password-reset
+// Verifies the signed reset token and updates the user's password.
+// Called by the dashboard /reset-password page after the user submits the form.
+// ---------------------------------------------------------------------------
+router.post('/confirm-password-reset', async (req, res) => {
+  const { token, password, passwordConfirm } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: 'Token and password are required.' });
+  }
+  if (password !== passwordConfirm) {
+    return res.status(400).json({ error: 'Passwords do not match.' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  try {
+    const { userId, type } = verifyToken(token);
+    if (type !== 'reset') return res.status(400).json({ error: 'Invalid token type.' });
+    const pb = await getClient();
+    await pb.collection('users').update(userId, { password, passwordConfirm: password }, { requestKey: null });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message ?? 'Password reset failed. The link may have expired.' });
   }
 });
 

@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { checkPasswordStrength } from '@/lib/auth';
-
-const PB = () => process.env.NEXT_PUBLIC_PB_URL;
+import { api } from '@/lib/api';
 
 const PAGE_STYLE = { minHeight:'100vh', background:'#0a0a0f', color:'#fff', fontFamily:'DM Sans, sans-serif', display:'flex', flexDirection:'column' };
 const GRID_BG    = { position:'fixed', inset:0, zIndex:0, pointerEvents:'none', backgroundImage:'linear-gradient(rgba(108,99,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.04) 1px,transparent 1px)', backgroundSize:'60px 60px' };
@@ -54,14 +53,13 @@ export default function ResetPasswordPage() {
 
     setLoading(true); setError('');
     try {
-      const res = await fetch(`${PB()}/api/collections/users/confirm-password-reset`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token, password: pass, passwordConfirm: confirm }),
+      const res = await api('/auth/confirm-password-reset', {
+        method: 'POST',
+        body:   JSON.stringify({ token, password: pass, passwordConfirm: confirm }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message ?? 'Reset failed. The link may have expired.');
+        throw new Error(data.error ?? 'Reset failed. The link may have expired.');
       }
       setDone(true);
     } catch (err) {

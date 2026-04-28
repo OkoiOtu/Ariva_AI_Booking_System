@@ -1,8 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-
-const PB = () => process.env.NEXT_PUBLIC_PB_URL;
+import { api } from '@/lib/api';
 
 const PAGE_STYLE = { minHeight:'100vh', background:'#0a0a0f', color:'#fff', fontFamily:'DM Sans, sans-serif', display:'flex', flexDirection:'column' };
 const GRID_BG    = { position:'fixed', inset:0, zIndex:0, pointerEvents:'none', backgroundImage:'linear-gradient(rgba(108,99,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.04) 1px,transparent 1px)', backgroundSize:'60px 60px' };
@@ -19,12 +18,11 @@ export default function ForgotPasswordPage() {
     if (!email.includes('@')) { setError('Enter a valid email address'); return; }
     setLoading(true); setError('');
     try {
-      const res = await fetch(`${PB()}/api/collections/users/request-password-reset`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+      await api('/auth/request-password-reset', {
+        method: 'POST',
+        body:   JSON.stringify({ email }),
       });
-      // PocketBase returns 204 on success regardless of whether email exists
+      // Backend always returns 200 regardless of whether email exists
       // (to prevent email enumeration attacks)
       setSent(true);
     } catch {
