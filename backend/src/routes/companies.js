@@ -44,6 +44,7 @@ router.get('/:id', async (req, res) => {
       city: c.city ?? '',
       plan: c.plan ?? 'starter',
       active: c.active ?? true,
+      logo_url: c.logo_url ?? '',
       vapi_assistant_id: c.vapi_assistant_id ?? '',
       twilio_number: c.twilio_number ?? '',
       created: c.created,
@@ -88,7 +89,7 @@ router.post('/', async (req, res) => {
  * PATCH /companies/:id
  */
 router.patch('/:id', async (req, res) => {
-  const ALLOWED = ['name', 'phone', 'email', 'city', 'plan', 'active', 'vapi_assistant_id', 'twilio_number', 'twilio_sid', 'twilio_token'];
+  const ALLOWED = ['name', 'phone', 'email', 'city', 'plan', 'active', 'logo_url', 'vapi_assistant_id', 'twilio_number', 'twilio_sid', 'twilio_token'];
   try {
     const pb      = await getClient();
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => ALLOWED.includes(k)));
