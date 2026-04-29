@@ -31,6 +31,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Must be before express.json() — Paystack webhook needs raw body for HMAC signature verification
+app.use('/payments/webhook', express.raw({ type: '*/*' }));
+
 app.use(express.json());
 
 // Company scope middleware — attaches req.companyId to every request
