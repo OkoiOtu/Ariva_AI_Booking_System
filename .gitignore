@@ -12,6 +12,8 @@ pocketbase/pb_data/
 # Next.js build output
 dashboard/.next/
 dashboard/out/
+ariva-admin/.next/
+ariva-admin/out/
 
 # Logs
 *.log

@@ -15,6 +15,7 @@ import notificationsRouter from './routes/notifications.js';
 import companiesRouter    from './routes/companies.js';
 import authRouter         from './routes/auth.js';
 import paymentsRouter     from './routes/payments.js';
+import adminRouter        from './routes/admin.js';
 import { companyScope }   from './middleware/companyScope.js';
 import { startStatusScheduler } from './services/statusScheduler.js';
 import { getClient, startTokenRefresh } from './services/pbService.js';
@@ -22,11 +23,17 @@ import { getClient, startTokenRefresh } from './services/pbService.js';
 const app  = express();
 const PORT = process.env.PORT ?? 3000;
 
-// CORS — expose x-company-id so browsers can send it
+// CORS — allow both the main dashboard and the admin app
+const ALLOWED_ORIGINS = new Set([
+  process.env.DASHBOARD_URL   ?? 'http://localhost:3001',
+  process.env.ADMIN_URL       ?? 'http://localhost:3002',
+  'https://dashboard-production-18de.up.railway.app',
+]);
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin',  process.env.DASHBOARD_URL ?? 'http://localhost:3001');
+  const origin = req.headers.origin ?? '';
+  if (ALLOWED_ORIGINS.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-company-id, x-paystack-signature');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-company-id, x-paystack-signature, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -67,6 +74,7 @@ app.use('/notifications', notificationsRouter);
 app.use('/companies',    companiesRouter);
 app.use('/auth',         authRouter);
 app.use('/payments',     paymentsRouter);
+app.use('/admin',        adminRouter);
 
 app.listen(PORT, async () => {
   console.info(`[server] Running on port ${PORT}`);
