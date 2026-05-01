@@ -33,7 +33,7 @@ router.get('/stats', async (req, res) => {
     const byPlan = { starter: 0, professional: 0, enterprise: 0 };
     companies.forEach(c => { if (byPlan[c.plan] !== undefined) byPlan[c.plan]++; });
 
-    const mrr        = byPlan.professional * 49;
+    const mrr        = byPlan.professional * 49000;
     const newThisMonth = companies.filter(c => c.created >= thisMonth).length;
     const activeBookings = bookings.filter(b => ['confirmed','on_trip'].includes(b.status)).length;
     const convertedLeads = leads.filter(l => l.status === 'converted').length;

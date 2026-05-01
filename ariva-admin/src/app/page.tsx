@@ -6,6 +6,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { getAllCompanies, getAllBookings, getAllLeads, getAllCalls, getAllPayments } from '@/lib/api';
+import { useCurrency } from '@/lib/currencyContext';
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO, subDays } from 'date-fns';
 
 const PLAN_COLORS = { starter: 'var(--gray)', professional: 'var(--accent)', enterprise: 'var(--purple)' };
@@ -49,6 +50,7 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 const TOOLTIP_STYLE = { background: '#1a1b22', border: '0.5px solid var(--border)', borderRadius: 8, fontSize: 12 };
 
 export default function OverviewPage() {
+  const { fmt } = useCurrency();
   const [companies, setCompanies] = useState<any[]>([]);
   const [bookings,  setBookings]  = useState<any[]>([]);
   const [leads,     setLeads]     = useState<any[]>([]);
@@ -70,7 +72,7 @@ export default function OverviewPage() {
   // KPIs
   const byPlan = { starter: 0, professional: 0, enterprise: 0 };
   companies.forEach(c => { if ((byPlan as any)[c.plan] !== undefined) (byPlan as any)[c.plan]++; });
-  const mrr = byPlan.professional * 49;
+  const mrr = byPlan.professional * 49000;
   const now = new Date();
   const thisMonthStart = startOfMonth(now);
   const newThisMonth = companies.filter(c => parseISO(c.created) >= thisMonthStart).length;
@@ -180,8 +182,8 @@ export default function OverviewPage() {
           sub={`Starter ${byPlan.starter} · Pro ${byPlan.professional} · Ent ${byPlan.enterprise}`}
         />
         <StatCard
-          label="MRR (USD)" icon="trending_up" color="var(--green)"
-          value={`$${mrr.toLocaleString()}`}
+          label="MRR" icon="trending_up" color="var(--green)"
+          value={fmt(mrr)}
           sub="Professional subscriptions only"
         />
         <StatCard
@@ -203,7 +205,7 @@ export default function OverviewPage() {
         />
         <StatCard
           label="Platform Revenue" icon="payments" color="var(--accent)"
-          value={`$${platformRevenue.toLocaleString()}`}
+          value={fmt(platformRevenue)}
           badge={revenueChange !== 0 ? `${revenueChange > 0 ? '+' : ''}${revenueChange}% vs last month` : undefined}
           sub="Subscription payments (paid)"
         />
@@ -289,12 +291,12 @@ export default function OverviewPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Ariva Platform Revenue (USD)">
+        <ChartCard title="Ariva Platform Revenue">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={revChartData}>
               <XAxis dataKey="month" tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`$${v}`, 'Revenue']} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [fmt(v), 'Revenue']} />
               <Line type="monotone" dataKey="revenue" stroke="var(--accent)" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>

@@ -124,17 +124,11 @@ export default function CheckoutPage() {
                     </div>
                     <div style={{ textAlign:'right' }}>
                       <p style={{ fontFamily:'Syne, sans-serif', fontSize:22, fontWeight:700 }}>{displayPrice}</p>
-                      {currency === 'USD' && usdAmount && (
-                        <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>≈ ₦{NGN_PRICE.toLocaleString()}</p>
-                      )}
-                      {currency === 'NGN' && usdAmount && (
+                      {usdAmount && (
                         <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>≈ ${usdAmount} USD</p>
                       )}
                     </div>
                   </div>
-                  {rateLabel && (
-                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:10 }}>Exchange rate: {rateLabel}</p>
-                  )}
                 </div>
 
                 <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:9, marginBottom:20 }}>
