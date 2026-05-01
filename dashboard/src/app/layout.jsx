@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AuthProvider, useAuth, getInitials, getDisplayName } from '@/lib/auth';
 import RightSidebar from '@/components/RightSidebar';
 import { CompanyProvider, useCompany } from '@/lib/companyContext';
+import { CurrencyProvider } from '@/lib/currencyContext';
 
 const NAV = [
   { href:'/dashboard', label:'Overview',      icon:'grid_view'                     },
@@ -403,7 +404,9 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <CompanyProvider>
-            <Shell>{children}</Shell>
+            <CurrencyProvider>
+              <Shell>{children}</Shell>
+            </CurrencyProvider>
           </CompanyProvider>
         </AuthProvider>
       </body>

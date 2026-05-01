@@ -24,29 +24,19 @@ export default function CheckoutPage() {
   const { user }     = useAuth();
   const { company }  = useCompany();
 
-  const [currency,   setCurrency]   = useState('NGN');
-  const [usdAmount,  setUsdAmount]  = useState(null);  // live USD equivalent
-  const [rateLabel,  setRateLabel]  = useState('');
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState('');
+  const [usdAmount, setUsdAmount] = useState(null); // informational only
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState('');
 
-  // Fetch live exchange rate on mount
+  // Fetch USD equivalent for info display only — payment is always NGN
   useEffect(() => {
     api('/payments/rate')
       .then(r => r.json())
-      .then(d => {
-        if (d.usdPerNgn) {
-          const usd = Math.ceil(NGN_PRICE * d.usdPerNgn);
-          setUsdAmount(usd);
-          setRateLabel(`1 USD ≈ ₦${d.ngnPerUsd?.toLocaleString()}`);
-        }
-      })
+      .then(d => { if (d.usdPerNgn) setUsdAmount(Math.ceil(NGN_PRICE * d.usdPerNgn)); })
       .catch(() => {});
   }, []);
 
-  const displayPrice = currency === 'NGN'
-    ? `₦${NGN_PRICE.toLocaleString('en-NG')}`
-    : usdAmount ? `$${usdAmount}` : 'Loading...';
+  const displayPrice = `₦${NGN_PRICE.toLocaleString('en-NG')}`;
 
   async function handlePay() {
     if (!user?.email || !company?.id) {
@@ -58,7 +48,7 @@ export default function CheckoutPage() {
     try {
       const res  = await api('/payments/initialize', {
         method:  'POST',
-        body:    JSON.stringify({ plan, companyId: company.id, email: user.email, currency }),
+        body:    JSON.stringify({ plan, companyId: company.id, email: user.email, currency: 'NGN' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to initialize payment.');
@@ -166,27 +156,14 @@ export default function CheckoutPage() {
               <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:16, padding:'28px 24px' }}>
                 <p style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.35)', marginBottom:18 }}>Payment details</p>
 
-                {/* Currency selector */}
-                <div style={{ marginBottom:20 }}>
-                  <label style={{ display:'block', fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.7)', marginBottom:8 }}>Currency</label>
-                  <div style={{ display:'flex', gap:8 }}>
-                    {[
-                      { code:'NGN', label:`₦ NGN  —  ₦${NGN_PRICE.toLocaleString()}` },
-                      { code:'USD', label:`$ USD  —  ${usdAmount ? `$${usdAmount}` : '...'}` },
-                    ].map(({ code, label }) => (
-                      <button key={code} onClick={() => setCurrency(code)} style={{
-                        flex:1, padding:'10px 8px', borderRadius:8, fontSize:13, fontWeight:500,
-                        textAlign:'center', cursor:'pointer', transition:'all 0.2s',
-                        background: currency === code ? '#6c63ff' : 'rgba(255,255,255,0.06)',
-                        border: `1px solid ${currency === code ? '#6c63ff' : 'rgba(255,255,255,0.12)'}`,
-                        color:'#fff',
-                      }}>
-                        {label}
-                      </button>
-                    ))}
+                {/* Price summary */}
+                <div style={{ marginBottom:20, padding:'14px 16px', borderRadius:10, background:'rgba(108,99,255,0.08)', border:'1px solid rgba(108,99,255,0.2)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <p style={{ fontSize:13, color:'rgba(255,255,255,0.6)' }}>Amount due</p>
+                    <p style={{ fontFamily:'Syne, sans-serif', fontSize:20, fontWeight:700 }}>₦{NGN_PRICE.toLocaleString()}</p>
                   </div>
-                  {currency === 'USD' && rateLabel && (
-                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:6 }}>Rate: {rateLabel} (live)</p>
+                  {usdAmount && (
+                    <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:4, textAlign:'right' }}>≈ ${usdAmount} USD at current rate</p>
                   )}
                 </div>
 
@@ -212,7 +189,7 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={handlePay}
-                  disabled={loading || !user || (currency === 'USD' && !usdAmount)}
+                  disabled={loading || !user}
                   style={{
                     width:'100%', padding:'14px', borderRadius:10, fontSize:15, fontWeight:600,
                     fontFamily:'DM Sans, sans-serif', textAlign:'center', border:'none', color:'#fff',

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import AppShell from '@/components/AppShell';
+import { CurrencyProvider } from '@/lib/currencyContext';
 
 export const metadata: Metadata = {
   title: 'Ariva Admin — Platform Console',
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <CurrencyProvider>
+            <AppShell>{children}</AppShell>
+          </CurrencyProvider>
         </AuthProvider>
       </body>
     </html>

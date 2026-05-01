@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { useCurrency, CURRENCIES } from '@/lib/currencyContext';
 
 const API = () => process.env.NEXT_PUBLIC_API_URL;
 
@@ -67,6 +68,7 @@ function SettingRow({ label, desc, children, last }) {
 export default function SettingsPage() {
   const { user } = useAuth();
   const isAdmin  = user?.role === 'admin' || user?.role === 'super_admin';
+  const { currency, setCurrency } = useCurrency();
 
   const [theme,    setTheme]    = useState('light');
   const [settings, setSettings] = useState(null);
@@ -121,11 +123,24 @@ export default function SettingsPage() {
 
       {/* Appearance */}
       <Section title="Appearance">
-        <SettingRow label="Theme" desc="Switch between light and dark mode" last>
+        <SettingRow label="Theme" desc="Switch between light and dark mode">
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <span style={{ fontSize:13, color:'var(--muted)' }}>{theme === 'light' ? 'Light' : 'Dark'}</span>
             <Toggle checked={theme === 'dark'} onChange={toggleTheme} />
           </div>
+        </SettingRow>
+        <SettingRow label="Display currency" desc="All money amounts across the dashboard will show in this currency, converted from NGN using live rates." last>
+          <select
+            value={currency}
+            onChange={e => setCurrency(e.target.value)}
+            style={{ padding:'6px 10px', fontSize:13, minWidth:180 }}
+          >
+            {CURRENCIES.map(c => (
+              <option key={c.code} value={c.code}>
+                {c.symbol} {c.code} — {c.name}
+              </option>
+            ))}
+          </select>
         </SettingRow>
       </Section>
 

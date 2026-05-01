@@ -2,13 +2,10 @@
 import { useEffect, useState } from 'react';
 import PlanGate, { BookingLimitBanner } from '@/components/PlanGate';
 import { api } from '@/lib/api';
-const SYMBOLS = { NGN:'₦', USD:'$', GBP:'£', EUR:'€' };
-
-function fmt(amount, currency='NGN') {
-  return `${SYMBOLS[currency]??''}${Number(amount || 0).toLocaleString()}`;
-}
+import { useCurrency } from '@/lib/currencyContext';
 
 export default function RevenuePage() {
+  const { fmt } = useCurrency();
   const today    = new Date().toISOString().slice(0,10);
   const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10);
 
@@ -39,7 +36,6 @@ export default function RevenuePage() {
     return true;
   });
 
-  const currency     = data[0]?.currency ?? 'NGN';
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
   const totalTrips   = data.reduce((s, d) => s + d.trips,   0);
   const maxRevenue   = Math.max(...data.map(d => d.revenue), 1);
@@ -96,9 +92,9 @@ export default function RevenuePage() {
       {/* Summary cards */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:24 }}>
         {[
-          { label:'Total revenue',   value: fmt(totalRevenue, currency), color:'var(--green)'  },
+          { label:'Total revenue',   value: fmt(totalRevenue), color:'var(--green)'  },
           { label:'Total trips',     value: totalTrips,                   color:'var(--accent)' },
-          { label:'Avg per trip',    value: totalTrips ? fmt(Math.round(totalRevenue/totalTrips), currency) : '—', color:'var(--blue)' },
+          { label:'Avg per trip',    value: totalTrips ? fmt(Math.round(totalRevenue/totalTrips)) : '—', color:'var(--blue)' },
           { label:'Periods',         value: data.length,                  color:'var(--amber)'  },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'16px 20px' }}>
@@ -124,8 +120,8 @@ export default function RevenuePage() {
               <div style={{ display:'flex', alignItems:'flex-end', gap:4, height:160, marginBottom:6 }}>
                 {data.map(d => (
                   <div key={d.period} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
-                    <span style={{ fontSize:9, color:'var(--muted)', whiteSpace:'nowrap' }}>{fmt(d.revenue, d.currency)}</span>
-                    <div title={`${periodLabel(d.period)}: ${fmt(d.revenue, d.currency)} (${d.trips} trips)`} style={{
+                    <span style={{ fontSize:9, color:'var(--muted)', whiteSpace:'nowrap' }}>{fmt(d.revenue)}</span>
+                    <div title={`${periodLabel(d.period)}: ${fmt(d.revenue)} (${d.trips} trips)`} style={{
                       width:'100%', minWidth:24,
                       height: `${Math.max((d.revenue/maxRevenue)*100, 3)}%`,
                       background:'var(--accent)', borderRadius:'3px 3px 0 0', opacity:0.85,
@@ -163,9 +159,9 @@ export default function RevenuePage() {
                     onMouseEnter={e => e.currentTarget.style.background='var(--bg)'}
                     onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                     <td style={{ padding:'10px 16px', fontSize:13 }}>{periodLabel(d.period)}</td>
-                    <td style={{ padding:'10px 16px', fontSize:13, fontWeight:500, color:'var(--green)' }}>{fmt(d.revenue, d.currency)}</td>
+                    <td style={{ padding:'10px 16px', fontSize:13, fontWeight:500, color:'var(--green)' }}>{fmt(d.revenue)}</td>
                     <td style={{ padding:'10px 16px', fontSize:13 }}>{d.trips}</td>
-                    <td style={{ padding:'10px 16px', fontSize:13, color:'var(--muted)' }}>{fmt(Math.round(d.revenue/d.trips), d.currency)}</td>
+                    <td style={{ padding:'10px 16px', fontSize:13, color:'var(--muted)' }}>{fmt(Math.round(d.revenue/d.trips))}</td>
                   </tr>
                 ))}
               </tbody>
