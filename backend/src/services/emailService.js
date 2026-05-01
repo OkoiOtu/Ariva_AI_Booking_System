@@ -1,8 +1,28 @@
-import { Resend } from 'resend';
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
+const FROM_EMAIL = process.env.BREVO_FROM_EMAIL ?? 'okoi.otu.okoi@gmail.com';
+const FROM_NAME  = process.env.BREVO_FROM_NAME  ?? 'Ariva';
+const DASH       = process.env.DASHBOARD_URL    ?? 'https://ariva-dashboard.up.railway.app';
 
-const resend  = new Resend(process.env.RESEND_API_KEY);
-const FROM    = process.env.RESEND_FROM    ?? 'Ariva <onboarding@resend.dev>';
-const DASH    = process.env.DASHBOARD_URL  ?? 'https://ariva-dashboard.up.railway.app';
+async function sendEmail(to, subject, html) {
+  const res = await fetch(BREVO_API, {
+    method:  'POST',
+    headers: {
+      'api-key':      process.env.BREVO_API_KEY ?? '',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender:      { name: FROM_NAME, email: FROM_EMAIL },
+      to:          [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Brevo API error ${res.status}: ${body}`);
+  }
+}
 
 function card(body) {
   return `
@@ -22,8 +42,8 @@ function card(body) {
 }
 
 export async function sendVerificationEmail(email, name, token) {
-  const url  = `${DASH}/verify-email?token=${encodeURIComponent(token)}`;
-  const html = card(`
+  const url = `${DASH}/verify-email?token=${encodeURIComponent(token)}`;
+  await sendEmail(email, 'Verify your Ariva account', card(`
     <h1 style="font-size:22px;font-weight:700;color:#0a0a0f;margin:0 0 10px">Verify your email</h1>
     <p style="font-size:15px;color:#4b5563;line-height:1.7;margin:0 0 28px">
       Hi ${name ?? 'there'}, welcome to Ariva! Click below to verify your email address and activate your account.
@@ -34,20 +54,12 @@ export async function sendVerificationEmail(email, name, token) {
     <p style="font-size:12px;color:#9ca3af;margin-top:24px;line-height:1.6">
       This link expires in 24 hours. If you didn't create an Ariva account, you can safely ignore this email.
     </p>
-  `);
-
-  const { error } = await resend.emails.send({
-    from:    FROM,
-    to:      email,
-    subject: 'Verify your Ariva account',
-    html,
-  });
-  if (error) throw new Error(error.message ?? 'Failed to send verification email');
+  `));
 }
 
 export async function sendPasswordResetEmail(email, name, token) {
-  const url  = `${DASH}/reset-password?token=${encodeURIComponent(token)}`;
-  const html = card(`
+  const url = `${DASH}/reset-password?token=${encodeURIComponent(token)}`;
+  await sendEmail(email, 'Reset your Ariva password', card(`
     <h1 style="font-size:22px;font-weight:700;color:#0a0a0f;margin:0 0 10px">Reset your password</h1>
     <p style="font-size:15px;color:#4b5563;line-height:1.7;margin:0 0 28px">
       Hi ${name ?? 'there'}, we received a request to reset your Ariva password. Click below to set a new one.
@@ -58,13 +70,5 @@ export async function sendPasswordResetEmail(email, name, token) {
     <p style="font-size:12px;color:#9ca3af;margin-top:24px;line-height:1.6">
       This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.
     </p>
-  `);
-
-  const { error } = await resend.emails.send({
-    from:    FROM,
-    to:      email,
-    subject: 'Reset your Ariva password',
-    html,
-  });
-  if (error) throw new Error(error.message ?? 'Failed to send password reset email');
+  `));
 }
