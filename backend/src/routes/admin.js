@@ -1,7 +1,11 @@
 import express from 'express';
+import twilio   from 'twilio';
 import { getClient } from '../services/pbService.js';
 import { authorOnly } from '../middleware/authorOnly.js';
-import { sendSms } from '../services/smsService.js';
+
+function getTwilio() {
+  return twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+}
 
 const router = express.Router();
 router.use(authorOnly);
@@ -234,7 +238,10 @@ router.post('/announce', async (req, res) => {
 
     if (channel === 'sms' || channel === 'both') {
       const phones = companies.map(c => c.phone).filter(Boolean);
-      await Promise.allSettled(phones.map(phone => sendSms(phone, `[Ariva] ${title ? title + ': ' : ''}${message}`)));
+      const client = getTwilio();
+      await Promise.allSettled(phones.map(phone =>
+        client.messages.create({ from: process.env.TWILIO_PHONE_NUMBER, to: phone, body: `[Ariva] ${title ? title + ': ' : ''}${message}` })
+      ));
     }
 
     res.json({ sent: companies.length, channel });
