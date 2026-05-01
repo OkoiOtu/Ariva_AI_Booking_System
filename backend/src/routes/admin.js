@@ -124,6 +124,37 @@ router.get('/companies/:id/details', async (req, res) => {
 });
 
 /**
+ * PATCH /admin/companies/:id
+ * Update general company settings (name, city, email, phone, vapi, twilio)
+ */
+router.patch('/companies/:id', async (req, res) => {
+  const ALLOWED = ['name','city','email','phone','vapi_assistant_id','twilio_number','plan'];
+  const data = Object.fromEntries(Object.entries(req.body).filter(([k]) => ALLOWED.includes(k)));
+  try {
+    const pb      = await getClient();
+    const updated = await pb.collection('companies').update(req.params.id, data, { requestKey: null });
+    res.json(updated);
+  } catch (err) {
+    console.error('[admin] company update error:', err.message);
+    res.status(500).json({ error: 'Failed to update company' });
+  }
+});
+
+/**
+ * DELETE /admin/companies/:id
+ */
+router.delete('/companies/:id', async (req, res) => {
+  try {
+    const pb = await getClient();
+    await pb.collection('companies').delete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[admin] company delete error:', err.message);
+    res.status(500).json({ error: 'Failed to delete company' });
+  }
+});
+
+/**
  * PATCH /admin/companies/:id/plan
  */
 router.patch('/companies/:id/plan', async (req, res) => {

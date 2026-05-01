@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getPB } from '@/lib/pb';
-import { getCompanyBookings, getCompanyCalls, getCompanyLeads, getCompanyUsers, getCompanyDrivers, getCompanyPayments, getCompanyActivity } from '@/lib/api';
+import { getCompanyDetails, updateCompany, suspendCompany as apiSuspend, deleteCompany as apiDelete } from '@/lib/api';
 import { format, parseISO } from 'date-fns';
 
 const TABS = ['Overview','Bookings','Calls','Leads','Drivers','Users','Payments','Settings'];
@@ -37,12 +36,7 @@ export default function CompanyDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    Promise.all([
-      getPB().collection('companies').getOne(id, { requestKey: null }),
-      getCompanyBookings(id), getCompanyCalls(id), getCompanyLeads(id),
-      getCompanyUsers(id), getCompanyDrivers(id), getCompanyPayments(id),
-      getCompanyActivity(id),
-    ]).then(([co, bk, ca, le, us, dr, pa, ac]) => {
+    getCompanyDetails(id).then(({ company: co, bookings: bk, calls: ca, leads: le, users: us, drivers: dr, payments: pa, activity: ac }) => {
       setCompany(co); setBookings(bk); setCalls(ca); setLeads(le);
       setUsers(us); setDrivers(dr); setPayments(pa); setActivity(ac);
       setEditForm({ name: co.name, city: co.city ?? '', email: co.email ?? '', phone: co.phone ?? '', plan: co.plan ?? 'starter', vapi_assistant_id: co.vapi_assistant_id ?? '', twilio_number: co.twilio_number ?? '' });
@@ -53,7 +47,7 @@ export default function CompanyDetailPage() {
     if (!editForm) return;
     setSaving(true);
     try {
-      const updated = await getPB().collection('companies').update(id, editForm, { requestKey: null });
+      const updated = await updateCompany(id, editForm);
       setCompany(updated);
       alert('Saved!');
     } catch (e) { alert('Failed to save'); }
@@ -62,14 +56,14 @@ export default function CompanyDetailPage() {
 
   async function suspendCompany() {
     if (!confirm(`${company?.active ? 'Deactivate' : 'Activate'} ${company?.name}?`)) return;
-    await getPB().collection('companies').update(id, { active: !company?.active }, { requestKey: null });
+    await apiSuspend(id, !company?.active);
     setCompany((p: any) => ({ ...p, active: !p.active }));
   }
 
   async function deleteCompany() {
     if (!confirm(`Permanently delete ${company?.name}? This cannot be undone.`)) return;
     if (!confirm('Are you absolutely sure?')) return;
-    await getPB().collection('companies').delete(id);
+    await apiDelete(id);
     router.push('/companies');
   }
 
