@@ -27,7 +27,7 @@ export default function SettingsPage() {
           <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 16 }}>Platform URLs</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
-              ['Dashboard', 'https://dashboard-production-18de.up.railway.app'],
+              ['Dashboard', 'https://ariva-dashboard.up.railway.app'],
               ['Backend API', process.env.NEXT_PUBLIC_API_URL],
               ['PocketBase', process.env.NEXT_PUBLIC_PB_URL],
             ].map(([label, url]) => (

@@ -1,7 +1,7 @@
 'use client';
 import PocketBase from 'pocketbase';
 
-const PB_URL = process.env.NEXT_PUBLIC_PB_URL || 'https://pocketbase-production-d054.up.railway.app';
+const PB_URL = process.env.NEXT_PUBLIC_PB_URL || 'https://ariva-pocketbase.up.railway.app';
 
 let _pb: PocketBase | null = null;
 

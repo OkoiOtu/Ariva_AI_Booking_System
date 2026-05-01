@@ -27,8 +27,8 @@ const PORT = process.env.PORT ?? 3000;
 const ALLOWED_ORIGINS = new Set([
   process.env.DASHBOARD_URL   ?? 'http://localhost:3001',
   process.env.ADMIN_URL       ?? 'http://localhost:3002',
-  'https://dashboard-production-18de.up.railway.app',
-  'https://blessedaibookingsystem-production-5408.up.railway.app',
+  'https://ariva-dashboard.up.railway.app',
+  'https://ariva-admin.up.railway.app',
 ]);
 app.use((req, res, next) => {
   const origin = req.headers.origin ?? '';
