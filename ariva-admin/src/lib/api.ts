@@ -1,84 +1,41 @@
-import { getPB } from './pb';
+const API = () => process.env.NEXT_PUBLIC_API_URL || '';
 
-export async function getAllCompanies() {
-  return getPB().collection('companies').getFullList({ sort: '-created', requestKey: null });
+function getToken(): string {
+  try {
+    const stored = sessionStorage.getItem('ariva_admin_auth');
+    if (stored) return JSON.parse(stored).token || '';
+  } catch {}
+  return '';
 }
 
-export async function getAllBookings(filter = '') {
-  return getPB().collection('bookings').getFullList({ sort: '-created', filter, requestKey: null });
-}
-
-export async function getAllLeads(filter = '') {
-  return getPB().collection('leads').getFullList({ sort: '-created', filter, requestKey: null });
-}
-
-export async function getAllCalls(filter = '') {
-  return getPB().collection('calls').getFullList({ sort: '-created', filter, requestKey: null });
-}
-
-export async function getAllPayments() {
-  return getPB().collection('payments').getFullList({ sort: '-created', requestKey: null });
-}
-
-export async function getAllUsers() {
-  return getPB().collection('users').getFullList({ sort: '-created', requestKey: null });
-}
-
-export async function getAllDrivers() {
-  return getPB().collection('drivers').getFullList({ sort: '-created', requestKey: null });
-}
-
-export async function getActivityLogs(filter = '') {
-  return getPB().collection('activity_logs').getFullList({
-    sort: '-created', filter, requestKey: null,
+async function apiFetch(path: string) {
+  const res = await fetch(`${API()}${path}`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+    cache: 'no-store',
   });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
+  return res.json();
 }
 
-export async function getCompanyBookings(companyId: string) {
-  return getPB().collection('bookings').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
+export const getAllCompanies   = () => apiFetch('/admin/companies');
+export const getAllBookings     = (companyId?: string, status?: string) => {
+  const params = new URLSearchParams();
+  if (companyId) params.set('companyId', companyId);
+  if (status)    params.set('status', status);
+  const qs = params.toString();
+  return apiFetch(`/admin/bookings${qs ? '?' + qs : ''}`);
+};
+export const getAllRevenue      = () => apiFetch('/admin/revenue');
+export const getAdminStats     = () => apiFetch('/admin/stats');
+export const getCompanyDetails = (id: string) => apiFetch(`/admin/companies/${id}/details`);
 
-export async function getCompanyCalls(companyId: string) {
-  return getPB().collection('calls').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
-
-export async function getCompanyLeads(companyId: string) {
-  return getPB().collection('leads').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
-
-export async function getCompanyUsers(companyId: string) {
-  return getPB().collection('users').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
-
-export async function getCompanyDrivers(companyId: string) {
-  return getPB().collection('drivers').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
-
-export async function getCompanyPayments(companyId: string) {
-  return getPB().collection('payments').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
-
-export async function getCompanyActivity(companyId: string) {
-  return getPB().collection('activity_logs').getFullList({
-    filter: `company_id = "${companyId}"`, sort: '-created', requestKey: null,
-  });
-}
+export const getAllLeads    = () => getAllBookings();
+export const getAllCalls    = () => apiFetch('/admin/bookings');
+export const getAllPayments = () => getAllRevenue().then(r => r.platformPayments || []);
+export const getAllUsers    = () => getAllCompanies().then(() => []);
 
 export function pingHealth(): Promise<boolean> {
-  const url = process.env.NEXT_PUBLIC_API_URL || '';
-  return fetch(`${url}/health`, { cache: 'no-store' })
+  return fetch(`${API()}/health`, { cache: 'no-store' })
     .then(r => r.ok)
     .catch(() => false);
 }
