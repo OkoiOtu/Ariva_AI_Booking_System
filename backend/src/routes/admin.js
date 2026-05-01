@@ -214,6 +214,64 @@ router.get('/bookings', async (req, res) => {
 });
 
 /**
+ * GET /admin/leads
+ */
+router.get('/leads', async (req, res) => {
+  try {
+    const pb = await getClient();
+    const { companyId } = req.query;
+    const filter = companyId ? `company_id = "${companyId}"` : '';
+    const [leads, companies] = await Promise.all([
+      pb.collection('leads').getFullList({ filter, sort: '-created', requestKey: null }),
+      pb.collection('companies').getFullList({ requestKey: null }),
+    ]);
+    const companyMap = Object.fromEntries(companies.map(c => [c.id, c]));
+    res.json(leads.map(l => ({ ...l, company: companyMap[l.company_id] ?? null })));
+  } catch (err) {
+    console.error('[admin] leads error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
+
+/**
+ * GET /admin/calls
+ */
+router.get('/calls', async (req, res) => {
+  try {
+    const pb = await getClient();
+    const { companyId } = req.query;
+    const filter = companyId ? `company_id = "${companyId}"` : '';
+    const [calls, companies] = await Promise.all([
+      pb.collection('calls').getFullList({ filter, sort: '-created', requestKey: null }),
+      pb.collection('companies').getFullList({ requestKey: null }),
+    ]);
+    const companyMap = Object.fromEntries(companies.map(c => [c.id, c]));
+    res.json(calls.map(c => ({ ...c, company: companyMap[c.company_id] ?? null })));
+  } catch (err) {
+    console.error('[admin] calls error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch calls' });
+  }
+});
+
+/**
+ * GET /admin/users
+ */
+router.get('/users', async (req, res) => {
+  try {
+    const pb = await getClient();
+    const [users, companies] = await Promise.all([
+      pb.collection('users').getFullList({ sort: '-created', requestKey: null }),
+      pb.collection('companies').getFullList({ requestKey: null }),
+    ]);
+    const companyMap = Object.fromEntries(companies.map(c => [c.id, c]));
+    res.json(users.map(u => ({ ...u, company: companyMap[u.company_id] ?? null })));
+  } catch (err) {
+    console.error('[admin] users error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+/**
  * GET /admin/revenue
  */
 router.get('/revenue', async (req, res) => {

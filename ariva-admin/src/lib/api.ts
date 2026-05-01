@@ -47,7 +47,11 @@ export const getAllBookings     = (companyId?: string, status?: string) => {
   const qs = params.toString();
   return apiFetch(`/admin/bookings${qs ? '?' + qs : ''}`);
 };
-export const getAllRevenue = () => apiFetch('/admin/revenue');
+export const getAllLeads    = (companyId?: string) => apiFetch(`/admin/leads${companyId ? '?companyId=' + companyId : ''}`);
+export const getAllCalls    = (companyId?: string) => apiFetch(`/admin/calls${companyId ? '?companyId=' + companyId : ''}`);
+export const getAllUsers    = () => apiFetch('/admin/users');
+export const getAllPayments = () => getAllRevenue().then((r: any) => r.platformPayments || []);
+export const getAllRevenue  = () => apiFetch('/admin/revenue');
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
 export const updateCompany    = (id: string, data: object) => apiPatch(`/admin/companies/${id}`, data);
