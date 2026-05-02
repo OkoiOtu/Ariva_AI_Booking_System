@@ -191,13 +191,8 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     const uploadForm = new FormData();
     uploadForm.append('logo', buffer, { filename: originalname, contentType: mimetype });
 
-    // Convert Node.js stream to Buffer so native fetch can use it
-    const formBuf = await new Promise((resolve, reject) => {
-      const chunks = [];
-      uploadForm.on('data', chunk => chunks.push(chunk));
-      uploadForm.on('end', () => resolve(Buffer.concat(chunks)));
-      uploadForm.on('error', reject);
-    });
+    // form-data provides getBuffer() for synchronous buffer access — no stream needed
+    const formBuf = uploadForm.getBuffer();
 
     const uploadRes = await fetch(
       `${pbUrl}/api/collections/companies/records/${req.params.id}`,
