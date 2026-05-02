@@ -207,7 +207,8 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     const logoUrl    = updated.logo ? `${backendUrl}/logo/${req.params.id}` : null;
 
     if (logoUrl) {
-      await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
+      const afterUpdate = await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
+      console.log('[companies] logo field after logo_url save:', afterUpdate.logo);
     }
 
     res.json({ logoUrl });

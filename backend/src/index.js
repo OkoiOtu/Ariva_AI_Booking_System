@@ -92,7 +92,9 @@ app.get('/logo/:companyId', async (req, res) => {
 
     const pbUrl   = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
     const fileUrl = `${pbUrl}/api/files/${company.collectionId}/${company.id}/${company.logo}`;
+    console.log('[logo] company.logo:', company.logo, '| collectionId:', company.collectionId, '| fileUrl:', fileUrl);
     const fileRes = await fetch(fileUrl, { headers: { Authorization: `Bearer ${pb.authStore.token}` } });
+    console.log('[logo] PocketBase file response:', fileRes.status, fileRes.statusText);
     if (!fileRes.ok) return res.status(fileRes.status).end();
 
     res.setHeader('Content-Type', fileRes.headers.get('content-type') || 'image/jpeg');
