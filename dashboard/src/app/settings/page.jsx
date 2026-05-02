@@ -126,7 +126,7 @@ function CallingStatusCard({ company, phoneNumber }) {
 
 export default function SettingsPage() {
   const { user }                  = useAuth();
-  const { company }               = useCompany();
+  const { company, refreshCompany } = useCompany();
   const { currency, setCurrency } = useCurrency();
   const isAdmin = ['admin','super_admin','author'].includes(user?.role);
   const isPro   = ['professional','enterprise'].includes(company?.plan);
@@ -242,6 +242,8 @@ export default function SettingsPage() {
       if (!res.ok) { setLogoError(data.error ?? 'Upload failed'); return; }
       setLogoSaved(true);
       setLogoFile(null);
+      setLogoPreview(null);
+      refreshCompany();
       setTimeout(() => setLogoSaved(false), 3000);
     } catch (err) {
       setLogoError(err.message ?? 'Upload failed');

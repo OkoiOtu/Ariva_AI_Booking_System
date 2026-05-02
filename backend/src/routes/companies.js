@@ -188,11 +188,14 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     form.append('logo', blob, originalname);
     const updated = await pb.collection('companies').update(req.params.id, form, { requestKey: null });
 
-    // Build a public URL and save it into logo_url so the dashboard can use it directly
+    // Build a public URL using the collection ID from the record response (most reliable)
     const pbPublicUrl = process.env.POCKETBASE_PUBLIC_URL ?? 'https://ariva-pocketbase.up.railway.app';
+    const collectionId = updated.collectionId ?? updated.collectionName ?? 'companies';
     const logoUrl = updated.logo
-      ? `${pbPublicUrl}/api/files/companies/${updated.id}/${updated.logo}`
+      ? `${pbPublicUrl}/api/files/${collectionId}/${updated.id}/${updated.logo}`
       : null;
+
+    console.log('[companies] logo upload — collectionId:', collectionId, 'logo field:', updated.logo, 'url:', logoUrl);
 
     if (logoUrl) {
       await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
