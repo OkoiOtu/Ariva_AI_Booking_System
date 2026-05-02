@@ -1,5 +1,6 @@
-import express from 'express';
-import multer  from 'multer';
+import express  from 'express';
+import multer   from 'multer';
+import FormData from 'form-data';
 import { getClient }        from '../services/pbService.js';
 import { logActivity }      from '../services/activityLogger.js';
 import { updateAssistant }  from '../services/vapiService.js';
@@ -185,14 +186,19 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     const pb    = await getClient();
     const pbUrl = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
 
-    // Use raw fetch to upload the file — PocketBase SDK v0.21 doesn't reliably
-    // handle native Node.js FormData+Blob in the update() method.
+    // Use npm form-data package — native Node.js Blob+FormData silently corrupts
+    // the file binary (PocketBase saves the filename but not the bytes).
     const uploadForm = new FormData();
-    uploadForm.append('logo', new Blob([buffer], { type: mimetype }), originalname);
+    uploadForm.append('logo', buffer, { filename: originalname, contentType: mimetype });
+
+    // Convert Node.js stream to Buffer so native fetch can use it
+    const chunks = [];
+    for await (const chunk of uploadForm) chunks.push(chunk);
+    const formBuf = Buffer.concat(chunks);
 
     const uploadRes = await fetch(
       `${pbUrl}/api/collections/companies/records/${req.params.id}`,
-      { method: 'PATCH', headers: { Authorization: `Bearer ${pb.authStore.token}` }, body: uploadForm }
+      { method: 'PATCH', headers: { Authorization: `Bearer ${pb.authStore.token}`, ...uploadForm.getHeaders() }, body: formBuf }
     );
     if (!uploadRes.ok) {
       const msg = await uploadRes.text();

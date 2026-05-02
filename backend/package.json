@@ -12,6 +12,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^8.4.1",
+    "form-data": "^4.0.5",
     "multer": "^2.1.1",
     "pocketbase": "^0.21.3",
     "resend": "^6.12.2",
