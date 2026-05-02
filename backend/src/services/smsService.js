@@ -31,6 +31,13 @@ function getAdminPhone(settings) {
   return settings.admin_phone_override || process.env.ADMIN_PHONE_NUMBER;
 }
 
+export async function smsPlain(to, body) {
+  if (!to || !body) return;
+  return client.messages.create({ body, from: FROM, to }).catch(err =>
+    console.error('[smsService] smsPlain failed:', err.message)
+  );
+}
+
 export async function sendCustomerConfirmation(booking) {
   const settings = await getSettings();
   if (!settings.sms_booking_confirmed) return;

@@ -1,7 +1,8 @@
 import express from 'express';
 import crypto  from 'crypto';
-import { getClient } from '../services/pbService.js';
-import { logActivity } from '../services/activityLogger.js';
+import { getClient }       from '../services/pbService.js';
+import { logActivity }     from '../services/activityLogger.js';
+import { provisionCalling } from '../services/phoneNumberService.js';
 
 const router = express.Router();
 
@@ -186,10 +187,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         return res.sendStatus(200);
       }
 
-      // Activate plan
+      // Activate plan and set expiry (30 days from now)
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       await pb.collection('companies').update(companyId, {
         plan,
-        active: true,
+        active:          true,
+        plan_expires_at: expiresAt,
       }, { requestKey: null });
 
       // Update payment record (non-fatal)
@@ -204,12 +207,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         }
       }).catch(() => {});
 
-      await logActivity(
-        'plan_upgraded',
-        'System',
-        `Company ${companyId} upgraded to ${plan} plan. Ref: ${reference}`,
-        companyId
-      );
+      await logActivity('plan_upgraded', 'System',
+        `Company ${companyId} upgraded to ${plan} plan. Ref: ${reference}`, companyId);
+
+      // Provision phone number + Vapi assistant (non-fatal)
+      if (plan === 'professional' || plan === 'enterprise') {
+        provisionCalling(companyId).catch(err =>
+          console.error('[payments] provisionCalling failed:', err.message)
+        );
+      }
 
       console.info(`[payments] Plan activated: ${plan} for company ${companyId}`);
     } catch (err) {

@@ -8,10 +8,12 @@ import { getClient } from './pbService.js';
  * @param {string} actor   — email or phone of whoever/whatever triggered it
  * @param {string} detail  — short human-readable description
  */
-export async function logActivity(action, actor, detail) {
+export async function logActivity(action, actor, detail, companyId = null) {
   try {
-    const pb = await getClient();
-    await pb.collection('activity_logs').create({ action, actor, detail });
+    const pb     = await getClient();
+    const record = { action, actor, detail };
+    if (companyId) record.company_id = companyId;
+    await pb.collection('activity_logs').create(record);
   } catch (err) {
     console.error('[activityLogger] Failed to log:', err.message);
   }

@@ -16,6 +16,7 @@ import companiesRouter    from './routes/companies.js';
 import authRouter         from './routes/auth.js';
 import paymentsRouter     from './routes/payments.js';
 import adminRouter        from './routes/admin.js';
+import phoneNumbersRouter from './routes/phoneNumbers.js';
 import { companyScope }   from './middleware/companyScope.js';
 import { startStatusScheduler } from './services/statusScheduler.js';
 import { getClient, startTokenRefresh } from './services/pbService.js';
@@ -58,6 +59,7 @@ app.use('/revenue',      companyScope);
 app.use('/export',       companyScope);
 app.use('/notifications', companyScope);
 app.use('/companies',    companyScope);
+app.use('/ai-custom-qa', companyScope);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/webhook',      webhookRouter);
@@ -73,9 +75,11 @@ app.use('/revenue',      revenueRouter);
 app.use('/export',       exportRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/companies',    companiesRouter);
+app.use('/ai-custom-qa', companiesRouter);
 app.use('/auth',         authRouter);
 app.use('/payments',     paymentsRouter);
 app.use('/admin',        adminRouter);
+app.use('/phone-numbers', phoneNumbersRouter);
 
 app.listen(PORT, async () => {
   console.info(`[server] Running on port ${PORT}`);

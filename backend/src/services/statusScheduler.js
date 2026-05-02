@@ -1,7 +1,8 @@
-import { getClient } from './pbService.js';
-import { logActivity } from './activityLogger.js';
-import { syncDriverStatuses } from './driverService.js';
-import { sendReminders } from './reminderService.js';
+import { getClient }           from './pbService.js';
+import { logActivity }         from './activityLogger.js';
+import { syncDriverStatuses }  from './driverService.js';
+import { sendReminders }       from './reminderService.js';
+import { deprovisionCalling }  from './phoneNumberService.js';
 
 /**
  * Runs every 60 seconds and auto-advances booking statuses:
@@ -17,6 +18,8 @@ import { sendReminders } from './reminderService.js';
  * For manually added test records with past pickup times, set
  * pickup_datetime to a future time to test the flow correctly.
  */
+
+let _lastExpiryCheck = 0; // track last daily expiry check
 
 export function startStatusScheduler() {
   console.info('[scheduler] Status scheduler started (60s interval)');
@@ -69,7 +72,73 @@ async function tick() {
     // Sync driver statuses with booking statuses
     await syncDriverStatuses();
 
+    // Check for expired plans — runs at most once per hour
+    const hourMs = 60 * 60 * 1000;
+    if (Date.now() - _lastExpiryCheck > hourMs) {
+      _lastExpiryCheck = Date.now();
+      await checkExpiredPlans();
+    }
+
   } catch (err) {
     console.error('[scheduler] tick error:', err.message);
+  }
+}
+
+async function checkExpiredPlans() {
+  try {
+    const pb  = await getClient();
+    const now = new Date().toISOString();
+
+    // Find companies where plan has expired and calling is still enabled
+    const expired = await pb.collection('companies').getFullList({
+      filter: `plan_expires_at != "" && plan_expires_at < "${now}" && calling_enabled = true`,
+      requestKey: null,
+    }).catch(() => []);
+
+    for (const c of expired) {
+      console.info(`[scheduler] Plan expired for company ${c.id} — disabling calling`);
+      await deprovisionCalling(c.id).catch(err =>
+        console.error(`[scheduler] deprovisionCalling failed for ${c.id}:`, err.message)
+      );
+    }
+
+    // 7-day advance warning — only for companies NOT yet expired
+    const sevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiringSoon = await pb.collection('companies').getFullList({
+      filter: `plan_expires_at != "" && plan_expires_at > "${now}" && plan_expires_at < "${sevenDays}" && calling_enabled = true`,
+      requestKey: null,
+    }).catch(() => []);
+
+    const DASHBOARD_URL = process.env.DASHBOARD_URL ?? 'https://ariva-dashboard.up.railway.app';
+    for (const c of expiringSoon) {
+      const expiryDate = new Date(c.plan_expires_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+      // Only send once — check activity log for recent warning
+      const recentWarn = await pb.collection('activity_logs').getFullList({
+        filter: `company_id = "${c.id}" && action = "plan_expiry_warning_sent" && created > "${new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()}"`,
+        requestKey: null,
+      }).catch(() => []);
+
+      if (recentWarn.length > 0) continue;
+
+      try {
+        const admin = await pb.collection('users').getFirstListItem(
+          `company_id = "${c.id}" && role = "super_admin"`, { requestKey: null }
+        ).catch(() => null);
+        if (admin?.phone) {
+          const { smsPlain } = await import('./smsService.js');
+          await smsPlain(admin.phone, [
+            `Your Ariva Professional plan expires on ${expiryDate}.`,
+            `AI call answering will pause when it expires.`,
+            `Renew now at ${DASHBOARD_URL}/plans to stay active.`,
+          ].join('\n'));
+        }
+        await logActivity('plan_expiry_warning_sent', 'system',
+          `7-day expiry warning sent for company ${c.id}`, c.id);
+      } catch (err) {
+        console.warn('[scheduler] expiry warning SMS non-fatal:', err.message);
+      }
+    }
+  } catch (err) {
+    console.error('[scheduler] checkExpiredPlans error:', err.message);
   }
 }

@@ -74,14 +74,17 @@ export async function processCall(message, companyId = null) {
     } catch { /* not found = first delivery, continue */ }
   }
 
-  const callRecord = await createCall({
+  const callData = {
     vapi_call_id:  vapiCallId,
     caller_phone:  callerPhone,
     transcript:    artifact?.transcript ?? '',
     recording_url: artifact?.recordingUrl ?? '',
     duration_secs: callDuration,
     outcome:       'incomplete',
-  });
+  };
+  if (companyId) callData.company_id = companyId;
+
+  const callRecord = await createCall(callData);
 
   const structured = analysis?.structuredData ?? {};
   console.info('[bookingService] Structured data received:', structured);
@@ -93,7 +96,7 @@ export async function processCall(message, companyId = null) {
   if (qualification.valid) {
     await handleConfirmedBooking(callRecord, structured, callerPhone, vehicleType, companyId);
   } else {
-    await handleLead(callRecord, structured, callerPhone, qualification.reason);
+    await handleLead(callRecord, structured, callerPhone, qualification.reason, companyId);
   }
 }
 
@@ -120,7 +123,7 @@ async function handleConfirmedBooking(callRecord, data, callerPhone, vehicleType
 
   console.info(`[bookingService] Price calculated: ${quotedPrice ? formatPrice(quotedPrice, quotedCurrency) : 'No rule matched'}`);
 
-  const booking = await createBooking({
+  const bookingData = {
     reference,
     caller_name:     data.callerName,
     caller_phone:    callerPhone,
@@ -136,7 +139,10 @@ async function handleConfirmedBooking(callRecord, data, callerPhone, vehicleType
     vehicle_type:    vehicleType !== 'any' ? vehicleType : '',
     sms_sent:        false,
     call:            callRecord.id,
-  });
+  };
+  if (companyId) bookingData.company_id = companyId;
+
+  const booking = await createBooking(bookingData);
 
   await callRecord.$update({ outcome: 'confirmed' });
   await logActivity('booking_confirmed', callerPhone, `Booking ${reference} confirmed for ${data.callerName}`);
@@ -153,9 +159,11 @@ async function handleConfirmedBooking(callRecord, data, callerPhone, vehicleType
   }
 }
 
-async function handleLead(callRecord, data, callerPhone, reason) {
-  const summary = buildLeadSummary(data, reason);
-  await createLead({ caller_phone: callerPhone, summary, status: 'new', call: callRecord.id });
+async function handleLead(callRecord, data, callerPhone, reason, companyId = null) {
+  const summary    = buildLeadSummary(data, reason);
+  const leadData   = { caller_phone: callerPhone, summary, status: 'new', call: callRecord.id };
+  if (companyId) leadData.company_id = companyId;
+  await createLead(leadData);
   await callRecord.$update({ outcome: 'lead' });
   await logActivity('lead_created', callerPhone, `Lead created. Reason: ${reason}`);
   console.info(`[bookingService] Call logged as lead. Reason: ${reason}`);
