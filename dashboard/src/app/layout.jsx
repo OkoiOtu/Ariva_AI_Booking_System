@@ -129,10 +129,7 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             {/* Company logo or Ariva brand mark */}
             {(() => {
-              const pbUrl  = process.env.NEXT_PUBLIC_PB_URL ?? '';
-              const logoSrc = company?.logo
-                ? `${pbUrl}/api/files/pbc_3866053794/${company.id}/${company.logo}`
-                : company?.logo_url ?? null;
+              const logoSrc = company?.logo_url ?? null;
               return logoSrc ? (
                 <img
                   src={logoSrc}

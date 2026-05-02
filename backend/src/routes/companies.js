@@ -188,12 +188,17 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     form.append('logo', blob, originalname);
     const updated = await pb.collection('companies').update(req.params.id, form, { requestKey: null });
 
-    const pbUrl   = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
+    // Build a public URL and save it into logo_url so the dashboard can use it directly
+    const pbPublicUrl = process.env.POCKETBASE_PUBLIC_URL ?? 'https://ariva-pocketbase.up.railway.app';
     const logoUrl = updated.logo
-      ? `${pbUrl}/api/files/pbc_3866053794/${updated.id}/${updated.logo}`
+      ? `${pbPublicUrl}/api/files/companies/${updated.id}/${updated.logo}`
       : null;
 
-    res.json({ logoUrl, record: updated });
+    if (logoUrl) {
+      await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
+    }
+
+    res.json({ logoUrl });
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: 'Company not found' });
     console.error('[companies] logo upload error:', err.message);

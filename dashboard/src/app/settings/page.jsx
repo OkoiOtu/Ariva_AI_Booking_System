@@ -284,11 +284,9 @@ export default function SettingsPage() {
         <FullRow label="Company logo" desc="Shown in the sidebar. Max 5 MB — JPEG, PNG, WebP, or SVG." last>
           <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
             {/* Current / preview */}
-            {(logoPreview || company?.logo || company?.logo_url) && (
+            {(logoPreview || company?.logo_url) && (
               <img
-                src={logoPreview ?? (company?.logo
-                  ? `${process.env.NEXT_PUBLIC_PB_URL}/api/files/pbc_3866053794/${company.id}/${company.logo}`
-                  : company.logo_url)}
+                src={logoPreview ?? company.logo_url}
                 alt="Logo"
                 style={{ width:56, height:56, objectFit:'contain', borderRadius:8, border:'0.5px solid var(--border)', background:'var(--bg)', padding:4, flexShrink:0 }}
               />
