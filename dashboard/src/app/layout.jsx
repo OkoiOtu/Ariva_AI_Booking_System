@@ -134,10 +134,10 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
                 <img
                   src={logoSrc}
                   alt={company.name ?? 'Logo'}
-                  style={{ width:28, height:28, borderRadius:7, flexShrink:0, objectFit:'contain', background:'var(--bg)', border:'0.5px solid var(--border)', padding:2 }}
+                  style={{ width:44, height:44, borderRadius:8, flexShrink:0, objectFit:'contain', background:'var(--bg)', border:'0.5px solid var(--border)', padding:3 }}
                 />
               ) : (
-                <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🚗</div>
+                <div style={{ width:44, height:44, borderRadius:8, flexShrink:0, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🚗</div>
               );
             })()}
             <p style={{ fontSize:13, fontWeight:700, color:'var(--accent)', letterSpacing:'-0.01em', lineHeight:1.2 }}>
