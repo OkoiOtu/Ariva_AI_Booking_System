@@ -1,6 +1,7 @@
 import express  from 'express';
 import multer   from 'multer';
 import FormData from 'form-data';
+import axios    from 'axios';
 import { getClient }        from '../services/pbService.js';
 import { logActivity }      from '../services/activityLogger.js';
 import { updateAssistant }  from '../services/vapiService.js';
@@ -186,23 +187,17 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     const pb    = await getClient();
     const pbUrl = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
 
-    // Use npm form-data package — native Node.js Blob+FormData silently corrupts
-    // the file binary (PocketBase saves the filename but not the bytes).
+    // axios + form-data is the reliable Node.js combination for multipart file uploads.
+    // Native fetch silently drops file bytes; axios pipes the stream correctly.
     const uploadForm = new FormData();
     uploadForm.append('logo', buffer, { filename: originalname, contentType: mimetype });
 
-    // form-data provides getBuffer() for synchronous buffer access — no stream needed
-    const formBuf = uploadForm.getBuffer();
-
-    const uploadRes = await fetch(
+    const axiosRes = await axios.patch(
       `${pbUrl}/api/collections/companies/records/${req.params.id}`,
-      { method: 'PATCH', headers: { Authorization: `Bearer ${pb.authStore.token}`, ...uploadForm.getHeaders() }, body: formBuf }
+      uploadForm,
+      { headers: { Authorization: `Bearer ${pb.authStore.token}`, ...uploadForm.getHeaders() } }
     );
-    if (!uploadRes.ok) {
-      const msg = await uploadRes.text();
-      throw new Error(`PocketBase upload failed (${uploadRes.status}): ${msg}`);
-    }
-    const updated = await uploadRes.json();
+    const updated = axiosRes.data;
     console.log('[companies] logo upload — logo field after upload:', updated.logo);
 
     // Store a backend proxy URL — img tags can't send auth headers, so we can't
