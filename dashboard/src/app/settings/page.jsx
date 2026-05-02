@@ -161,7 +161,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    fetch(API() + '/notifications/settings').then(r => r.json()).then(setSettings).catch(console.error);
+    api('/notifications/settings').then(r => r.json()).then(setSettings).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function SettingsPage() {
   async function save() {
     setSaving(true); setError(''); setSaved(false);
     try {
-      const res  = await fetch(API() + '/notifications/settings', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(settings) });
+      const res  = await api('/notifications/settings', { method:'PATCH', body:JSON.stringify(settings) });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Failed to save'); return; }
       setSettings(data); setSaved(true);

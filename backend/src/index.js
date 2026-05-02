@@ -18,6 +18,8 @@ import paymentsRouter     from './routes/payments.js';
 import adminRouter        from './routes/admin.js';
 import phoneNumbersRouter from './routes/phoneNumbers.js';
 import { companyScope }   from './middleware/companyScope.js';
+import { requireAuth }    from './middleware/requireAuth.js';
+import rateLimit          from 'express-rate-limit';
 import { startStatusScheduler } from './services/statusScheduler.js';
 import { getClient, startTokenRefresh } from './services/pbService.js';
 
@@ -45,21 +47,32 @@ app.use('/payments/webhook', express.raw({ type: '*/*' }));
 
 app.use(express.json());
 
-// Company scope middleware — attaches req.companyId to every request
+// Rate limiting — brute-force protection on auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 10,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many requests — try again in a minute' },
+});
+app.use('/auth', authLimiter);
+
+// Company scope + auth — attaches req.companyId and verifies the Bearer token
 // Webhook is excluded because it comes from Vapi, not the dashboard
-app.use('/bookings',     companyScope);
-app.use('/leads',        companyScope);
-app.use('/calls',        companyScope);
-app.use('/users',        companyScope);
-app.use('/activity',     companyScope);
-app.use('/stats',        companyScope);
-app.use('/pricing',      companyScope);
-app.use('/drivers',      companyScope);
-app.use('/revenue',      companyScope);
-app.use('/export',       companyScope);
-app.use('/notifications', companyScope);
-app.use('/companies',    companyScope);
-app.use('/ai-custom-qa', companyScope);
+const protect = [companyScope, requireAuth];
+app.use('/bookings',      protect);
+app.use('/leads',         protect);
+app.use('/calls',         protect);
+app.use('/users',         protect);
+app.use('/stats',         protect);
+app.use('/pricing',       protect);
+app.use('/drivers',       protect);
+app.use('/revenue',       protect);
+app.use('/export',        protect);
+app.use('/notifications', protect);
+app.use('/companies',     protect);
+app.use('/ai-custom-qa',  protect);
+// Activity POST is called for pre-login events (login_failed, suspended) — no token available yet.
+// GET requires auth (applied in the route handler).
+app.use('/activity', companyScope);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/webhook',      webhookRouter);

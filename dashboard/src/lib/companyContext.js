@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './auth';
+import { api } from './api';
 
 const CompanyContext = createContext(null);
 
@@ -19,7 +20,7 @@ export function CompanyProvider({ children }) {
         const companyId = user.company_id;
         if (!companyId) { setLoading(false); return; }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/companies/${companyId}`);
+        const res = await api(`/companies/${companyId}`);
         if (!res.ok) throw new Error(`Failed to load company (${res.status})`);
         const record = await res.json();
         setCompany(record);

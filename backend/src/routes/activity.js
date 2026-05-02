@@ -1,12 +1,13 @@
 import express from 'express';
 import { getClient } from '../services/pbService.js';
 import { buildFilter } from '../middleware/companyScope.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
 const esc = v => String(v ?? '').replace(/"/g, '');
 
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const pb = await getClient();
     const { page=1, perPage=30, action='' } = req.query;

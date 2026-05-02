@@ -57,12 +57,16 @@ export default function BookingsPage() {
     setQuery(search);
   }
 
-  function downloadCSV() {
+  async function downloadCSV() {
     const params = new URLSearchParams();
     if (query)    params.set('search', query);
     if (fromDate) params.set('fromDate', fromDate);
     if (toDate)   params.set('toDate', toDate);
-    window.open(`${API()}/export/bookings?${params}`);
+    const res  = await api(`/export/bookings?${params}`);
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'bookings.csv'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   const totalPages = Math.ceil(total / PER_PAGE);

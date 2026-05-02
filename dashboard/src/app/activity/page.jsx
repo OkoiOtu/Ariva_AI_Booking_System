@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { timeAgo } from '@/lib/formatters';
+import { api } from '@/lib/api';
 
 const ACTION_LABELS = {
   booking_confirmed: { label: 'Booking confirmed',   color: 'var(--accent)',  bg: 'var(--accent-bg)',  icon: 'event_available'  },
@@ -60,7 +61,7 @@ export default function ActivityPage() {
     try {
       const params = new URLSearchParams({ page, perPage: PER_PAGE });
       if (filter) params.set('action', filter);
-      const res  = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/activity?${params}`);
+      const res  = await api(`/activity?${params}`);
       const data = await res.json();
       setLogs(data.items ?? []);
       setTotal(data.totalItems ?? 0);

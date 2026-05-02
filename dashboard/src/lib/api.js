@@ -1,7 +1,7 @@
 /**
  * api.js — central fetch helper
  *
- * Automatically injects x-company-id header on every request.
+ * Automatically injects x-company-id and Authorization headers on every request.
  * Import this instead of using fetch directly in all dashboard pages.
  *
  * Usage:
@@ -11,10 +11,16 @@
 
 function getCompanyId() {
   if (typeof window === 'undefined') return '';
-  // Read from sessionStorage where CompanyProvider caches it
   try {
-    const raw = sessionStorage.getItem('ariva_company_id');
-    return raw ?? '';
+    return sessionStorage.getItem('ariva_company_id') ?? '';
+  } catch { return ''; }
+}
+
+function getPbToken() {
+  if (typeof window === 'undefined') return '';
+  try {
+    const raw = sessionStorage.getItem('pb_auth');
+    return raw ? (JSON.parse(raw).token ?? '') : '';
   } catch { return ''; }
 }
 
@@ -25,9 +31,11 @@ export function apiUrl(path) {
 
 export function api(path, options = {}) {
   const companyId = getCompanyId();
+  const token     = getPbToken();
   const headers   = {
     ...(options.headers ?? {}),
     ...(companyId ? { 'x-company-id': companyId } : {}),
+    ...(token     ? { 'Authorization': `Bearer ${token}` } : {}),
   };
 
   // Only set Content-Type for JSON bodies (not FormData)

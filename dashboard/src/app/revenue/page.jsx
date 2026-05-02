@@ -49,8 +49,12 @@ export default function RevenuePage() {
     return key;
   }
 
-  function downloadCSV() {
-    window.open(`${API()}/export/bookings`);
+  async function downloadCSV() {
+    const res  = await api('/export/bookings');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'bookings.csv'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
