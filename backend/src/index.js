@@ -75,6 +75,29 @@ app.use('/ai-custom-qa',  protect);
 app.use('/activity', companyScope);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
+// Public logo proxy — img tags can't send auth headers, so we fetch from PocketBase
+// using the admin token and stream the file back. No auth required on this endpoint.
+app.get('/logo/:companyId', async (req, res) => {
+  try {
+    const pb      = await getClient();
+    const company = await pb.collection('companies').getOne(req.params.companyId, { requestKey: null });
+    if (!company.logo) return res.status(404).end();
+
+    const pbUrl   = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
+    const fileUrl = `${pbUrl}/api/files/${company.collectionId}/${company.id}/${company.logo}`;
+    const fileRes = await fetch(fileUrl, { headers: { Authorization: `Bearer ${pb.authStore.token}` } });
+    if (!fileRes.ok) return res.status(fileRes.status).end();
+
+    res.setHeader('Content-Type', fileRes.headers.get('content-type') || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    const buf = await fileRes.arrayBuffer();
+    res.send(Buffer.from(buf));
+  } catch (err) {
+    console.error('[logo] proxy error:', err.message);
+    res.status(500).end();
+  }
+});
 app.use('/webhook',      webhookRouter);
 app.use('/bookings',     bookingsRouter);
 app.use('/leads',        leadsRouter);

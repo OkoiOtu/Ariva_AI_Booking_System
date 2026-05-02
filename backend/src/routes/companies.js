@@ -188,14 +188,10 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     form.append('logo', blob, originalname);
     const updated = await pb.collection('companies').update(req.params.id, form, { requestKey: null });
 
-    // Build a public URL using the collection ID from the record response (most reliable)
-    const pbPublicUrl = process.env.POCKETBASE_PUBLIC_URL ?? 'https://ariva-pocketbase.up.railway.app';
-    const collectionId = updated.collectionId ?? updated.collectionName ?? 'companies';
-    const logoUrl = updated.logo
-      ? `${pbPublicUrl}/api/files/${collectionId}/${updated.id}/${updated.logo}`
-      : null;
-
-    console.log('[companies] logo upload — collectionId:', collectionId, 'logo field:', updated.logo, 'url:', logoUrl);
+    // Store a proxy URL (served by our own backend) so the browser can load the logo
+    // without needing PocketBase auth headers — img tags can't send Authorization headers.
+    const backendUrl = process.env.BACKEND_URL ?? 'https://ariva-backend.up.railway.app';
+    const logoUrl    = updated.logo ? `${backendUrl}/logo/${req.params.id}` : null;
 
     if (logoUrl) {
       await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
