@@ -22,7 +22,6 @@ const NAV = [
   { href:'/pricing',   label:'Pricing',       icon:'payments'                    },
   { href:'/users',       label:'Users',         icon:'group',    adminOnly:true    },
   { href:'/companies',   label:'Companies',     icon:'domain',   authorOnly:true },
-  { href:'/phone-pool',  label:'Number Pool',   icon:'phone',    authorOnly:true },
 ];
 
 const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout'];

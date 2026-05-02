@@ -1,7 +1,7 @@
 import { STRUCTURED_DATA_SCHEMA } from '../../vapi-assistant-config.js';
 
 const VAPI_BASE   = 'https://api.vapi.ai';
-const BACKEND_URL = process.env.BACKEND_URL ?? 'https://blessedaibookingsystem-production.up.railway.app';
+const BACKEND_URL = process.env.BACKEND_URL ?? 'https://ariva-backend.up.railway.app';
 
 function headers() {
   return {

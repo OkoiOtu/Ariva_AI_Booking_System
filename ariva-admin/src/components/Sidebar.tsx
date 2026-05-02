@@ -11,6 +11,7 @@ const NAV = [
   { label: 'Revenue',        href: '/revenue',       icon: 'payments' },
   { label: 'Payments',       href: '/payments',      icon: 'credit_card' },
   { label: 'All Users',      href: '/users',         icon: 'group' },
+  { label: 'Number Pool',    href: '/phone-pool',    icon: 'phone'         },
   { label: 'System Health',  href: '/system',        icon: 'monitor_heart' },
   { label: 'Announcements',  href: '/announcements', icon: 'campaign' },
   { label: 'Settings',       href: '/settings',      icon: 'settings' },

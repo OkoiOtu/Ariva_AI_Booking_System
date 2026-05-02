@@ -16,9 +16,10 @@ confirms pricing, and updates the dashboard automatically.
 - **Deployment**: Railway (all three services)
 
 ## Live URLs (Railway)
-- Backend:    https://blessedaibookingsystem-production.up.railway.app
-- PocketBase: https://pocketbase-production-8baf.up.railway.app
-- Dashboard:  https://dashboard-production-18de.up.railway.app
+- Backend:    https://ariva-backend.up.railway.app
+- PocketBase: https://ariva-pocketbase.up.railway.app
+- Dashboard:  https://ariva-dashboard.up.railway.app
+- Admin:      https://ariva-admin.up.railway.app
 
 ## User Role Hierarchy
 1. `author`      — Platform developer, sees all companies (your role)

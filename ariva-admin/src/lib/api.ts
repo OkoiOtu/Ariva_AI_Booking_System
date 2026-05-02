@@ -60,6 +60,13 @@ export const suspendCompany   = (id: string, active: boolean) => apiPatch(`/admi
 export const deleteCompany    = (id: string) => apiDelete(`/admin/companies/${id}`);
 export const sendAnnouncement = (body: object) => apiPost('/admin/announce', body);
 
+// ── Phone Numbers ─────────────────────────────────────────────────────────────
+export const getPhoneNumbers    = () => apiFetch('/phone-numbers');
+export const addPhoneNumber     = (body: object) => apiPost('/phone-numbers', body);
+export const assignPhoneNumber  = (numberId: string, companyId: string) => apiPost('/phone-numbers/assign', { numberId, companyId });
+export const provisionCalling   = (companyId: string) => apiPost(`/phone-numbers/provision/${companyId}`, {});
+export const disableCalling     = (companyId: string) => apiPost(`/phone-numbers/disable/${companyId}`, {});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 export function pingHealth(): Promise<boolean> {
   return fetch(`${API()}/health`, { cache: 'no-store' })
