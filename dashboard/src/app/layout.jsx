@@ -292,10 +292,11 @@ function Shell({ children }) {
     }
   }, [user, loading, isPublic, pathname, router]);
 
-  // Reset logout dialog and redirect flag on pathname change
+  // Reset transient UI state on navigation
   useEffect(() => {
     setShowLogout(false);
     setMobileOpen(false);
+    setLoggingOut(false);
   }, [pathname]);
 
   // Show spinner while auth is loading or logout is in progress
