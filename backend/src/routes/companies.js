@@ -1,7 +1,10 @@
 import express from 'express';
+import multer  from 'multer';
 import { getClient }        from '../services/pbService.js';
 import { logActivity }      from '../services/activityLogger.js';
 import { updateAssistant }  from '../services/vapiService.js';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
 const esc    = v => String(v ?? '').replace(/"/g, '');
@@ -166,6 +169,35 @@ router.get('/ai-custom-qa', async (req, res) => {
   } catch (err) {
     console.error('[companies] ai-custom-qa error:', err.message);
     res.status(500).json({ error: 'Failed to fetch Q&A' });
+  }
+});
+
+/**
+ * PATCH /companies/:id/logo
+ * Upload a company logo (multipart/form-data, field name "logo").
+ * Stores the file in PocketBase and returns the public URL.
+ */
+router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const { mimetype, originalname, buffer } = req.file;
+
+  try {
+    const pb   = await getClient();
+    const blob = new Blob([buffer], { type: mimetype });
+    const form = new FormData();
+    form.append('logo', blob, originalname);
+    const updated = await pb.collection('companies').update(req.params.id, form, { requestKey: null });
+
+    const pbUrl   = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
+    const logoUrl = updated.logo
+      ? `${pbUrl}/api/files/pbc_3866053794/${updated.id}/${updated.logo}`
+      : null;
+
+    res.json({ logoUrl, record: updated });
+  } catch (err) {
+    if (err.status === 404) return res.status(404).json({ error: 'Company not found' });
+    console.error('[companies] logo upload error:', err.message);
+    res.status(500).json({ error: 'Failed to upload logo' });
   }
 });
 

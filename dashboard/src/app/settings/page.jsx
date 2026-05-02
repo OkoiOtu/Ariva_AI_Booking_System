@@ -131,11 +131,16 @@ export default function SettingsPage() {
   const isAdmin = ['admin','super_admin','author'].includes(user?.role);
   const isPro   = ['professional','enterprise'].includes(company?.plan);
 
-  const [theme,    setTheme]    = useState('light');
-  const [settings, setSettings] = useState(null);
-  const [saving,   setSaving]   = useState(false);
-  const [saved,    setSaved]    = useState(false);
-  const [error,    setError]    = useState('');
+  const [theme,       setTheme]       = useState('light');
+  const [settings,    setSettings]    = useState(null);
+  const [saving,      setSaving]      = useState(false);
+  const [saved,       setSaved]       = useState(false);
+  const [error,       setError]       = useState('');
+  const [logoFile,    setLogoFile]    = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoSaving,  setLogoSaving]  = useState(false);
+  const [logoSaved,   setLogoSaved]   = useState(false);
+  const [logoError,   setLogoError]   = useState('');
 
   // AI state
   const [phoneNumber, setPhoneNumber] = useState(null);
@@ -215,6 +220,34 @@ export default function SettingsPage() {
     } finally { setSaving(false); }
   }
 
+  function onLogoChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoError('');
+    setLogoSaved(false);
+    const reader = new FileReader();
+    reader.onload = ev => setLogoPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function saveLogo() {
+    if (!logoFile || !company?.id) return;
+    setLogoSaving(true); setLogoError(''); setLogoSaved(false);
+    try {
+      const form = new FormData();
+      form.append('logo', logoFile);
+      const res  = await api(`/companies/${company.id}/logo`, { method: 'PATCH', body: form });
+      const data = await res.json();
+      if (!res.ok) { setLogoError(data.error ?? 'Upload failed'); return; }
+      setLogoSaved(true);
+      setLogoFile(null);
+      setTimeout(() => setLogoSaved(false), 3000);
+    } catch (err) {
+      setLogoError(err.message ?? 'Upload failed');
+    } finally { setLogoSaving(false); }
+  }
+
   async function saveAiSettings() {
     setAiSaving(true); setAiError(''); setAiSaved(false);
     try {
@@ -245,6 +278,44 @@ export default function SettingsPage() {
   return (
     <div style={{ width:'100%', maxWidth:680, margin:'0 auto' }}>
       <h1 style={{ fontSize:20, fontWeight:500, marginBottom:24 }}>Settings</h1>
+
+      {/* Company profile */}
+      <Section title="Company profile">
+        <FullRow label="Company logo" desc="Shown in the sidebar. Max 5 MB — JPEG, PNG, WebP, or SVG." last>
+          <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+            {/* Current / preview */}
+            {(logoPreview || company?.logo || company?.logo_url) && (
+              <img
+                src={logoPreview ?? (company?.logo
+                  ? `${process.env.NEXT_PUBLIC_PB_URL}/api/files/pbc_3866053794/${company.id}/${company.logo}`
+                  : company.logo_url)}
+                alt="Logo"
+                style={{ width:56, height:56, objectFit:'contain', borderRadius:8, border:'0.5px solid var(--border)', background:'var(--bg)', padding:4, flexShrink:0 }}
+              />
+            )}
+            <div style={{ flex:1, minWidth:200 }}>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                onChange={onLogoChange}
+                style={{ fontSize:13, width:'100%', marginBottom:8 }}
+              />
+              {logoFile && (
+                <button
+                  className="primary"
+                  onClick={saveLogo}
+                  disabled={logoSaving}
+                  style={{ fontSize:13, padding:'6px 16px' }}
+                >
+                  {logoSaving ? 'Uploading...' : 'Upload logo'}
+                </button>
+              )}
+              {logoSaved  && <p style={{ fontSize:12, color:'var(--green)', marginTop:4 }}>Logo updated — refresh to see it in the sidebar</p>}
+              {logoError  && <p style={{ fontSize:12, color:'var(--red)',   marginTop:4 }}>{logoError}</p>}
+            </div>
+          </div>
+        </FullRow>
+      </Section>
 
       {/* Appearance */}
       <Section title="Appearance">

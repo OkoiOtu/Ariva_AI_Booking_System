@@ -128,15 +128,21 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
         <div style={{ padding:'12px 14px', borderBottom:'0.5px solid var(--border)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             {/* Company logo or Ariva brand mark */}
-            {company?.logo_url ? (
-              <img
-                src={company.logo_url}
-                alt={company.name ?? 'Logo'}
-                style={{ width:28, height:28, borderRadius:7, flexShrink:0, objectFit:'contain', background:'var(--bg)', border:'0.5px solid var(--border)', padding:2 }}
-              />
-            ) : (
-              <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🚗</div>
-            )}
+            {(() => {
+              const pbUrl  = process.env.NEXT_PUBLIC_PB_URL ?? '';
+              const logoSrc = company?.logo
+                ? `${pbUrl}/api/files/pbc_3866053794/${company.id}/${company.logo}`
+                : company?.logo_url ?? null;
+              return logoSrc ? (
+                <img
+                  src={logoSrc}
+                  alt={company.name ?? 'Logo'}
+                  style={{ width:28, height:28, borderRadius:7, flexShrink:0, objectFit:'contain', background:'var(--bg)', border:'0.5px solid var(--border)', padding:2 }}
+                />
+              ) : (
+                <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🚗</div>
+              );
+            })()}
             <p style={{ fontSize:13, fontWeight:700, color:'var(--accent)', letterSpacing:'-0.01em', lineHeight:1.2 }}>
               {company?.name ? company.name.split(' ')[0] : 'Ariva'}
             </p>
