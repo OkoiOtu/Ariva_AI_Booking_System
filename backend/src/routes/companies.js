@@ -182,14 +182,27 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
   const { mimetype, originalname, buffer } = req.file;
 
   try {
-    const pb   = await getClient();
-    const blob = new Blob([buffer], { type: mimetype });
-    const form = new FormData();
-    form.append('logo', blob, originalname);
-    const updated = await pb.collection('companies').update(req.params.id, form, { requestKey: null });
+    const pb    = await getClient();
+    const pbUrl = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
 
-    // Store a proxy URL (served by our own backend) so the browser can load the logo
-    // without needing PocketBase auth headers — img tags can't send Authorization headers.
+    // Use raw fetch to upload the file — PocketBase SDK v0.21 doesn't reliably
+    // handle native Node.js FormData+Blob in the update() method.
+    const uploadForm = new FormData();
+    uploadForm.append('logo', new Blob([buffer], { type: mimetype }), originalname);
+
+    const uploadRes = await fetch(
+      `${pbUrl}/api/collections/companies/records/${req.params.id}`,
+      { method: 'PATCH', headers: { Authorization: `Bearer ${pb.authStore.token}` }, body: uploadForm }
+    );
+    if (!uploadRes.ok) {
+      const msg = await uploadRes.text();
+      throw new Error(`PocketBase upload failed (${uploadRes.status}): ${msg}`);
+    }
+    const updated = await uploadRes.json();
+    console.log('[companies] logo upload — logo field after upload:', updated.logo);
+
+    // Store a backend proxy URL — img tags can't send auth headers, so we can't
+    // point directly at the PocketBase file URL.
     const backendUrl = process.env.BACKEND_URL ?? 'https://ariva-backend.up.railway.app';
     const logoUrl    = updated.logo ? `${backendUrl}/logo/${req.params.id}` : null;
 
@@ -199,9 +212,8 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
 
     res.json({ logoUrl });
   } catch (err) {
-    if (err.status === 404) return res.status(404).json({ error: 'Company not found' });
     console.error('[companies] logo upload error:', err.message);
-    res.status(500).json({ error: 'Failed to upload logo' });
+    res.status(500).json({ error: err.message ?? 'Failed to upload logo' });
   }
 });
 
