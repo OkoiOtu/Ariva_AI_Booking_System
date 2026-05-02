@@ -82,7 +82,13 @@ app.get('/logo/:companyId', async (req, res) => {
   try {
     const pb      = await getClient();
     const company = await pb.collection('companies').getOne(req.params.companyId, { requestKey: null });
-    if (!company.logo) return res.status(404).end();
+    if (!company.logo) {
+      // File was deleted from PocketBase — clear the stale logo_url so the frontend stops trying
+      if (company.logo_url) {
+        await pb.collection('companies').update(company.id, { logo_url: '' }, { requestKey: null }).catch(() => {});
+      }
+      return res.status(404).end();
+    }
 
     const pbUrl   = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
     const fileUrl = `${pbUrl}/api/files/${company.collectionId}/${company.id}/${company.logo}`;

@@ -290,6 +290,7 @@ export default function SettingsPage() {
               <img
                 src={logoPreview ?? company.logo_url}
                 alt="Logo"
+                onError={e => { e.currentTarget.style.display = 'none'; }}
                 style={{ width:56, height:56, objectFit:'contain', borderRadius:8, border:'0.5px solid var(--border)', background:'var(--bg)', padding:4, flexShrink:0 }}
               />
             )}
