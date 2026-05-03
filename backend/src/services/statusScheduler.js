@@ -35,7 +35,7 @@ async function tick() {
     // ── confirmed → on_trip ───────────────────────────────────────────────
     // Only advance bookings whose pickup time has arrived
     const allConfirmed = await pb.collection('bookings').getFullList({
-      filter: 'status = "confirmed" || status = ""', requestKey: null,
+      filter: 'status = "confirmed"', requestKey: null,
     });
 
     for (const b of allConfirmed) {
