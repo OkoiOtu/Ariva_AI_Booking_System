@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
 
     pb.collection('users').authRefresh()
       .then(auth => {
-        if (auth.record?.suspended) {
+        if (auth.record?.role === 'author' || auth.record?.suspended) {
           pb.authStore.clear();
           setUser(null);
         } else {
@@ -46,6 +46,11 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const auth = await pb.collection('users').authWithPassword(email, password);
+
+    if (auth.record?.role === 'author') {
+      pb.authStore.clear();
+      throw new Error('AUTHOR');
+    }
 
     if (auth.record?.suspended) {
       pb.authStore.clear();

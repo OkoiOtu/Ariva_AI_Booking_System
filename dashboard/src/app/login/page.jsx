@@ -116,6 +116,11 @@ export default function LoginPage() {
       clearLockoutState(email);
       router.replace('/dashboard');
     } catch (err) {
+      if (err.message === 'AUTHOR') {
+        setError('Author accounts are not permitted on this dashboard. Please use the Ariva Admin portal.');
+        setLoading(false);
+        return;
+      }
       // Suspended users get a clear message, no lockout counter
       if (err.message === 'SUSPENDED') {
         setError('This account has been suspended. Please contact your administrator.');
