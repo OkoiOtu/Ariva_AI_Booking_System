@@ -188,8 +188,9 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
     await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
     res.json({ logoUrl });
   } catch (err) {
-    console.error('[companies] logo upload error:', err.message);
-    res.status(500).json({ error: err.message ?? 'Failed to upload logo' });
+    const detail = err?.response?.data ?? err?.data ?? err?.message ?? 'Failed to upload logo';
+    console.error('[companies] logo upload error:', JSON.stringify(detail));
+    res.status(500).json({ error: detail });
   }
 });
 
