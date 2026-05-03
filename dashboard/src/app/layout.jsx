@@ -131,9 +131,9 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
                 img overlays it and hides itself on load error */}
             <div style={{ position:'relative', width:44, height:44, flexShrink:0 }}>
               <div style={{ width:44, height:44, borderRadius:8, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🚗</div>
-              {company?.logo_url && (
+              {(company?.logo_data || company?.logo_url) && (
                 <img
-                  src={company.logo_url}
+                  src={company.logo_data ?? company.logo_url}
                   alt={company.name ?? 'Logo'}
                   onError={e => { e.currentTarget.style.display = 'none'; }}
                   style={{ position:'absolute', inset:0, width:44, height:44, borderRadius:8, objectFit:'contain', background:'var(--bg)', border:'0.5px solid var(--border)', padding:3 }}

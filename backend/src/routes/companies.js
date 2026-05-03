@@ -183,10 +183,11 @@ router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
   const { mimetype, buffer } = req.file;
 
   try {
-    const pb     = await getClient();
-    const logoUrl = `data:${mimetype};base64,${buffer.toString('base64')}`;
-    await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
-    res.json({ logoUrl });
+    const pb      = await getClient();
+    const dataUrl = `data:${mimetype};base64,${buffer.toString('base64')}`;
+    // logo_data is a JSON field with no character limit — stores the full base64 data URL
+    await pb.collection('companies').update(req.params.id, { logo_data: dataUrl, logo_url: '' }, { requestKey: null });
+    res.json({ logoUrl: dataUrl });
   } catch (err) {
     const raw    = err?.response?.data ?? err?.data ?? err?.message ?? 'Failed to upload logo';
     const detail = typeof raw === 'string' ? raw : JSON.stringify(raw);
