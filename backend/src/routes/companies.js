@@ -1,7 +1,5 @@
-import express  from 'express';
-import multer   from 'multer';
-import FormData from 'form-data';
-import axios    from 'axios';
+import express from 'express';
+import multer  from 'multer';
 import { getClient }        from '../services/pbService.js';
 import { logActivity }      from '../services/activityLogger.js';
 import { updateAssistant }  from '../services/vapiService.js';
@@ -177,39 +175,17 @@ router.get('/ai-custom-qa', async (req, res) => {
 /**
  * PATCH /companies/:id/logo
  * Upload a company logo (multipart/form-data, field name "logo").
- * Stores the file in PocketBase and returns the public URL.
+ * Stores the logo as a base64 data URL in the logo_url text field.
+ * This avoids PocketBase file storage entirely — no proxy, no auth headers needed.
  */
 router.patch('/:id/logo', upload.single('logo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const { mimetype, originalname, buffer } = req.file;
+  const { mimetype, buffer } = req.file;
 
   try {
-    const pb    = await getClient();
-    const pbUrl = process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090';
-
-    // axios + form-data is the reliable Node.js combination for multipart file uploads.
-    // Native fetch silently drops file bytes; axios pipes the stream correctly.
-    const uploadForm = new FormData();
-    uploadForm.append('logo', buffer, { filename: originalname, contentType: mimetype });
-
-    const axiosRes = await axios.patch(
-      `${pbUrl}/api/collections/companies/records/${req.params.id}`,
-      uploadForm,
-      { headers: { Authorization: `Bearer ${pb.authStore.token}`, ...uploadForm.getHeaders() } }
-    );
-    const updated = axiosRes.data;
-    console.log('[companies] logo upload — logo field after upload:', updated.logo);
-
-    // Store a backend proxy URL — img tags can't send auth headers, so we can't
-    // point directly at the PocketBase file URL.
-    const backendUrl = process.env.BACKEND_URL ?? 'https://ariva-backend.up.railway.app';
-    const logoUrl    = updated.logo ? `${backendUrl}/logo/${req.params.id}` : null;
-
-    if (logoUrl) {
-      const afterUpdate = await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
-      console.log('[companies] logo field after logo_url save:', afterUpdate.logo);
-    }
-
+    const pb     = await getClient();
+    const logoUrl = `data:${mimetype};base64,${buffer.toString('base64')}`;
+    await pb.collection('companies').update(req.params.id, { logo_url: logoUrl }, { requestKey: null });
     res.json({ logoUrl });
   } catch (err) {
     console.error('[companies] logo upload error:', err.message);
