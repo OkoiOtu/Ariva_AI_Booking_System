@@ -4,16 +4,10 @@ import PlanGate from '@/components/PlanGate';
 import { useAuth } from '@/lib/auth';
 
 import { api } from '@/lib/api';
+import { formatPrice } from '@/lib/formatters';
 
 const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR'];
 const VEHICLES   = ['any', 'sedan', 'suv', 'van', 'bus'];
-
-const CURRENCY_SYMBOLS = { NGN: '₦', USD: '$', GBP: '£', EUR: '€' };
-
-function formatPrice(amount, currency = 'NGN') {
-  if (!amount && amount !== 0) return '—';
-  return `${CURRENCY_SYMBOLS[currency] ?? ''}${Number(amount).toLocaleString()}`;
-}
 
 function Modal({ title, onClose, children }) {
   return (

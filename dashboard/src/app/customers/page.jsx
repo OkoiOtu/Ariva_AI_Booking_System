@@ -1,11 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { formatDatetime, formatDuration } from '@/lib/formatters';
+import { formatDatetime, formatDuration, CURRENCY_SYMBOLS } from '@/lib/formatters';
 import StatusBadge from '@/components/StatusBadge';
 import BookingDetailModal from '@/components/BookingDetailModal';
 import { api } from '@/lib/api';
-
-const CURRENCY_SYMBOLS = { NGN:'₦', USD:'$', GBP:'£', EUR:'€' };
 
 export default function CustomersPage() {
   const [phone,    setPhone]    = useState('');

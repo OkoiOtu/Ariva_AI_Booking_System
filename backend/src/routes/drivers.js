@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
         const bfilter  = buildFilter(req.companyId, [`driver = "${d.id}"`, '(status = "on_trip" || status = "assigned" || status = "confirmed")']);
         const current  = await pb.collection('bookings').getList(1, 1, { filter: bfilter, sort:'pickup_datetime', requestKey:null });
         return { ...d, current_booking: current.items[0] ?? null };
-      } catch { return { ...d, current_booking: null }; }
+      } catch (err) { console.error('[drivers] enrichment error:', err.message); return { ...d, current_booking: null }; }
     }));
     res.json(enriched);
   } catch (err) {

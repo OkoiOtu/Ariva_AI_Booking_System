@@ -33,7 +33,7 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-const emptyForm = { name:'', slug:'', phone:'', email:'', city:'Lagos', plan:'starter', logo_url:'', vapi_assistant_id:'', twilio_number:'' };
+const emptyForm = { name:'', slug:'', phone:'', email:'', city:'Lagos', plan:'starter', vapi_assistant_id:'', twilio_number:'' };
 
 function CompanyForm({ initial, onSave, onCancel, saving, error, isEdit }) {
   const [form, setForm] = useState(initial);
@@ -80,18 +80,6 @@ function CompanyForm({ initial, onSave, onCancel, saving, error, isEdit }) {
           <label style={{ fontSize:12, color:'var(--muted)' }}>Email</label>
           <input type="email" value={form.email} onChange={f('email')} style={s} />
         </div>
-        <div style={{ gridColumn:'1/-1' }}>
-          <label style={{ fontSize:12, color:'var(--muted)' }}>Logo URL</label>
-          <input value={form.logo_url} onChange={f('logo_url')} placeholder="https://example.com/logo.png" style={s} />
-          <p style={{ fontSize:11, color:'var(--muted)', marginTop:3 }}>Paste a direct image URL (PNG or SVG recommended). Shown in the dashboard sidebar.</p>
-          {form.logo_url && (
-            <img src={form.logo_url} alt="Logo preview" style={{ marginTop:8, height:40, objectFit:'contain', borderRadius:6, border:'0.5px solid var(--border)', padding:4, background:'var(--bg)' }} />
-          )}
-        </div>
-      </div>
-
-      <p style={{ fontSize:12, fontWeight:500, color:'var(--muted)', marginTop:4 }}>Integrations (optional)</p>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         <div>
           <label style={{ fontSize:12, color:'var(--muted)' }}>Vapi Assistant ID</label>
           <input value={form.vapi_assistant_id} onChange={f('vapi_assistant_id')} placeholder="From Vapi dashboard" style={s} />
@@ -112,27 +100,65 @@ function CompanyForm({ initial, onSave, onCancel, saving, error, isEdit }) {
   );
 }
 
+function PlanBadge({ plan }) {
+  const meta = PLAN_META[plan] ?? PLAN_META.starter;
+  return (
+    <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, fontWeight:500, background:meta.bg, color:meta.color }}>
+      {meta.label}
+    </span>
+  );
+}
+
+const TABS = ['Overview', 'Companies', 'Recent bookings', 'System'];
+
 export default function CompaniesPage() {
   const { user } = useAuth();
   const isAuthor = user?.role === 'author';
 
+  const [tab,        setTab]        = useState('Overview');
+  const [stats,      setStats]      = useState(null);
   const [companies,  setCompanies]  = useState([]);
+  const [bookings,   setBookings]   = useState([]);
+  const [health,     setHealth]     = useState(null);
   const [loading,    setLoading]    = useState(true);
+
   const [showAdd,    setShowAdd]    = useState(false);
   const [editTarget, setEditTarget] = useState(null);
+  const [planTarget, setPlanTarget] = useState(null);
   const [error,      setError]      = useState('');
   const [saving,     setSaving]     = useState(false);
+  const [actionMsg,  setActionMsg]  = useState('');
 
   async function load() {
     setLoading(true);
     try {
-      const res  = await api('/companies');
-      const data = await res.json();
-      setCompanies(Array.isArray(data) ? data : []);
+      const [statsRes, companiesRes] = await Promise.all([
+        api('/admin/stats').then(r => r.json()),
+        api('/admin/companies').then(r => r.json()),
+      ]);
+      setStats(statsRes);
+      setCompanies(Array.isArray(companiesRes) ? companiesRes : []);
     } finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, []);
+  async function loadBookings() {
+    const res = await api('/admin/bookings?from=' + new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10));
+    const data = await res.json();
+    setBookings(Array.isArray(data) ? data.slice(0, 50) : []);
+  }
+
+  async function loadHealth() {
+    const res = await api('/admin/system/health');
+    setHealth(await res.json());
+  }
+
+  useEffect(() => { if (isAuthor) load(); }, [isAuthor]);
+
+  useEffect(() => {
+    if (!isAuthor) return;
+    if (tab === 'Recent bookings') loadBookings();
+    if (tab === 'System') loadHealth();
+  }, [tab, isAuthor]);
 
   async function createCompany(form) {
     setSaving(true); setError('');
@@ -147,16 +173,38 @@ export default function CompaniesPage() {
   async function updateCompany(form) {
     setSaving(true); setError('');
     try {
-      const res  = await api(`/companies/${editTarget.id}`, { method:'PATCH', body:JSON.stringify(form) });
+      const res  = await api(`/admin/companies/${editTarget.id}`, { method:'PATCH', body:JSON.stringify(form) });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Failed to update'); return; }
       setEditTarget(null); load();
     } finally { setSaving(false); }
   }
 
-  async function toggleActive(company) {
-    await api(`/companies/${company.id}`, { method:'PATCH', body:JSON.stringify({ active: !company.active }) });
+  async function changePlan(companyId, plan) {
+    setSaving(true);
+    const res  = await api(`/admin/companies/${companyId}/plan`, { method:'PATCH', body:JSON.stringify({ plan }) });
+    const data = await res.json();
+    setSaving(false);
+    if (!res.ok) { setActionMsg(data.error ?? 'Failed'); return; }
+    setActionMsg(`Plan updated to ${plan}`);
+    setPlanTarget(null);
     load();
+  }
+
+  async function toggleActive(company) {
+    await api(`/admin/companies/${company.id}/suspend`, { method:'PATCH', body:JSON.stringify({ active: !company.active }) });
+    load();
+  }
+
+  async function provisionCalling(companyId) {
+    setSaving(true); setActionMsg('');
+    try {
+      const res  = await api(`/phone-numbers/provision/${companyId}`, { method:'POST' });
+      const data = await res.json();
+      setActionMsg(res.ok ? `Calling provisioned — ${data.number ?? 'number assigned'}` : (data.error ?? 'Failed'));
+      if (res.ok) load();
+    } catch { setActionMsg('Failed to provision calling'); }
+    finally { setSaving(false); }
   }
 
   if (!isAuthor) {
@@ -170,16 +218,10 @@ export default function CompaniesPage() {
     );
   }
 
-  // Platform stats derived from company list
-  const total      = companies.length;
-  const active     = companies.filter(c => c.active).length;
-  const byPlan     = { starter: 0, professional: 0, enterprise: 0 };
-  companies.forEach(c => { if (byPlan[c.plan] !== undefined) byPlan[c.plan]++; });
-  const mrr = byPlan.professional * 49 + byPlan.enterprise * 0; // USD estimate
-
   return (
     <div style={{ width:'100%' }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24, flexWrap:'wrap', gap:12 }}>
+      {/* Header */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20, flexWrap:'wrap', gap:12 }}>
         <div>
           <h1 style={{ fontSize:20, fontWeight:500 }}>Author dashboard</h1>
           <p style={{ fontSize:13, color:'var(--muted)', marginTop:2 }}>Platform-level view — all tenants</p>
@@ -187,29 +229,83 @@ export default function CompaniesPage() {
         <button className="primary" onClick={() => { setShowAdd(true); setError(''); }}>+ Add company</button>
       </div>
 
-      {/* Platform stats */}
-      {!loading && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px,1fr))', gap:10, marginBottom:24 }}>
-          <StatCard label="Total tenants"    value={total}                  sub={`${active} active`} />
-          <StatCard label="Starter"          value={byPlan.starter}         color="var(--gray)" />
-          <StatCard label="Professional"     value={byPlan.professional}    color="var(--accent)" />
-          <StatCard label="Enterprise"       value={byPlan.enterprise}      color="var(--purple)" />
-          <StatCard label="Est. MRR (USD)"   value={`$${mrr.toLocaleString()}`} color="var(--green)" sub="Professional only" />
+      {/* Action message */}
+      {actionMsg && (
+        <div style={{ marginBottom:14, padding:'10px 14px', borderRadius:'var(--radius)', fontSize:13,
+          background:'var(--green-bg)', color:'var(--green)', border:'0.5px solid var(--green)' }}>
+          {actionMsg}
+          <button onClick={() => setActionMsg('')} style={{ float:'right', background:'none', border:'none', cursor:'pointer', fontSize:14, color:'inherit' }}>×</button>
         </div>
       )}
 
-      {loading ? (
-        <p style={{ color:'var(--muted)' }}>Loading...</p>
-      ) : companies.length === 0 ? (
-        <div style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'48px 24px', textAlign:'center' }}>
-          <span className="material-symbols-outlined" style={{ fontSize:36, color:'var(--muted)', display:'block', marginBottom:10 }}>domain</span>
-          <p style={{ color:'var(--muted)', fontSize:14 }}>No companies yet.</p>
-        </div>
-      ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {companies.map(company => {
-            const planMeta = PLAN_META[company.plan] ?? PLAN_META.starter;
-            return (
+      {/* Tabs */}
+      <div style={{ display:'flex', gap:2, marginBottom:20, borderBottom:'0.5px solid var(--border)' }}>
+        {TABS.map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            padding:'7px 16px', fontSize:13, border:'none', background:'none', cursor:'pointer',
+            color: tab === t ? 'var(--accent)' : 'var(--muted)',
+            borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
+            marginBottom:-1, fontWeight: tab === t ? 500 : 400,
+          }}>{t}</button>
+        ))}
+      </div>
+
+      {/* OVERVIEW TAB */}
+      {tab === 'Overview' && (
+        loading ? <p style={{ color:'var(--muted)' }}>Loading...</p> : stats && (
+          <>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px,1fr))', gap:10, marginBottom:24 }}>
+              <StatCard label="Total tenants"    value={stats.totalCompanies}    sub={`${stats.activeCompanies} active`} />
+              <StatCard label="New this month"   value={stats.newThisMonth}      color="var(--accent)" />
+              <StatCard label="Starter"          value={stats.companiesByPlan?.starter ?? 0}      color="var(--gray)" />
+              <StatCard label="Professional"     value={stats.companiesByPlan?.professional ?? 0} color="var(--accent)" />
+              <StatCard label="Enterprise"       value={stats.companiesByPlan?.enterprise ?? 0}   color="var(--purple)" />
+              <StatCard label="Est. MRR (₦)"     value={`₦${(stats.mrr ?? 0).toLocaleString()}`} color="var(--green)" sub="Professional × ₦49k" />
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px,1fr))', gap:10, marginBottom:24 }}>
+              <StatCard label="Total bookings"   value={stats.totalBookings}  sub={`${stats.activeBookings} active`} />
+              <StatCard label="Total leads"      value={stats.totalLeads}     sub={`${stats.convertedLeads} converted`} />
+              <StatCard label="Total calls"      value={stats.totalCalls} />
+              <StatCard label="Revenue this month" value={`₦${(stats.revenueThisMonth ?? 0).toLocaleString()}`} color="var(--green)" sub={`₦${(stats.revenueLastMonth ?? 0).toLocaleString()} last month`} />
+              <StatCard label="Total platform revenue" value={`₦${(stats.totalRevenue ?? 0).toLocaleString()}`} color="var(--green)" />
+            </div>
+
+            {/* Companies snapshot */}
+            <p style={{ fontSize:13, fontWeight:500, marginBottom:10 }}>All tenants</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {companies.map(c => (
+                <div key={c.id} style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'14px 18px', display:'flex', alignItems:'center', gap:14, flexWrap:'wrap', opacity: c.active ? 1 : 0.5 }}>
+                  <div style={{ flex:1, minWidth:160 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3, flexWrap:'wrap' }}>
+                      <span style={{ fontSize:14, fontWeight:500 }}>{c.name}</span>
+                      <PlanBadge plan={c.plan} />
+                      {!c.active && <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'var(--red-bg)', color:'var(--red)' }}>Inactive</span>}
+                    </div>
+                    <p style={{ fontSize:12, color:'var(--muted)' }}>{c.city ?? ''}{c.city && c.email ? ' · ' : ''}{c.email ?? ''}</p>
+                  </div>
+                  <div style={{ display:'flex', gap:16, fontSize:12, color:'var(--muted)' }}>
+                    <span><strong style={{ color:'var(--text)' }}>{c.bookingCount ?? 0}</strong> bookings</span>
+                    <span><strong style={{ color:'var(--text)' }}>{c.userCount ?? 0}</strong> users</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )
+      )}
+
+      {/* COMPANIES TAB */}
+      {tab === 'Companies' && (
+        loading ? <p style={{ color:'var(--muted)' }}>Loading...</p> :
+        companies.length === 0 ? (
+          <div style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'48px 24px', textAlign:'center' }}>
+            <span className="material-symbols-outlined" style={{ fontSize:36, color:'var(--muted)', display:'block', marginBottom:10 }}>domain</span>
+            <p style={{ color:'var(--muted)', fontSize:14 }}>No companies yet.</p>
+          </div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {companies.map(company => (
               <div key={company.id} style={{
                 background:'var(--surface)', border:'0.5px solid var(--border)',
                 borderRadius:'var(--radius-lg)', padding:'18px 20px',
@@ -219,32 +315,39 @@ export default function CompaniesPage() {
                   <div style={{ display:'flex', alignItems:'center', gap:12, flex:1 }}>
                     {/* Logo or initial */}
                     <div style={{ width:38, height:38, borderRadius:8, flexShrink:0, overflow:'hidden', background:'var(--accent-bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:700, color:'var(--accent)', border:'0.5px solid var(--border)' }}>
-                      {company.logo_url
-                        ? <img src={company.logo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'contain' }} />
+                      {(company.logo_data || company.logo_url)
+                        ? <img src={company.logo_data ?? company.logo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'contain' }} onError={e => { e.currentTarget.style.display='none'; }} />
                         : company.name?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div style={{ flex:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
                         <p style={{ fontSize:14, fontWeight:500 }}>{company.name}</p>
                         <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'var(--gray-bg)', color:'var(--gray)', fontFamily:'monospace' }}>{company.slug}</span>
-                        <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, fontWeight:500, background:planMeta.bg, color:planMeta.color }}>{planMeta.label}</span>
+                        <PlanBadge plan={company.plan} />
                         <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, fontWeight:500,
                           background: company.active ? 'var(--green-bg)' : 'var(--red-bg)',
                           color:      company.active ? 'var(--green)'    : 'var(--red)',
                         }}>{company.active ? 'Active' : 'Inactive'}</span>
+                        {company.calling_enabled && <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'var(--purple-bg)', color:'var(--purple)' }}>AI calling</span>}
                       </div>
                       <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
                         {company.city  && <p style={{ fontSize:12, color:'var(--muted)' }}>{company.city}</p>}
                         {company.phone && <p style={{ fontSize:12, color:'var(--muted)' }}>{company.phone}</p>}
                         {company.email && <p style={{ fontSize:12, color:'var(--muted)' }}>{company.email}</p>}
-                        {company.vapi_assistant_id && <p style={{ fontSize:12, color:'var(--purple)' }}>Vapi ✓</p>}
-                        {company.twilio_number && <p style={{ fontSize:12, color:'var(--blue)' }}>{company.twilio_number}</p>}
+                        <p style={{ fontSize:12, color:'var(--muted)' }}>{company.bookingCount ?? 0} bookings · {company.userCount ?? 0} users</p>
+                        {company.lastBookingDate && <p style={{ fontSize:12, color:'var(--muted)' }}>Last booking: {new Date(company.lastBookingDate).toLocaleDateString()}</p>}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                  <div style={{ display:'flex', gap:6, flexShrink:0, flexWrap:'wrap' }}>
                     <button onClick={() => { setEditTarget(company); setError(''); }} style={{ fontSize:12, padding:'4px 10px' }}>Edit</button>
+                    <button onClick={() => setPlanTarget(company)} style={{ fontSize:12, padding:'4px 10px' }}>Plan</button>
+                    {!company.calling_enabled && company.plan !== 'starter' && (
+                      <button onClick={() => provisionCalling(company.id)} disabled={saving} style={{ fontSize:12, padding:'4px 10px', color:'var(--purple)', border:'0.5px solid var(--purple)', background:'var(--purple-bg)' }}>
+                        Provision AI
+                      </button>
+                    )}
                     <button onClick={() => toggleActive(company)} style={{ fontSize:12, padding:'4px 10px',
                       background: company.active ? 'var(--amber-bg)' : 'var(--green-bg)',
                       color:      company.active ? 'var(--amber)'    : 'var(--green)',
@@ -255,11 +358,83 @@ export default function CompaniesPage() {
                   </div>
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        )
+      )}
+
+      {/* RECENT BOOKINGS TAB */}
+      {tab === 'Recent bookings' && (
+        bookings.length === 0 ? (
+          <p style={{ color:'var(--muted)' }}>Loading bookings...</p>
+        ) : (
+          <div style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', overflow:'hidden' }}>
+            <div className="table-scroll">
+              <table style={{ width:'100%', borderCollapse:'collapse', minWidth:700 }}>
+                <thead>
+                  <tr style={{ borderBottom:'0.5px solid var(--border)' }}>
+                    {['Reference','Company','Customer','Pickup','Status','Created'].map(h => (
+                      <th key={h} style={{ textAlign:'left', padding:'10px 16px', fontSize:12, color:'var(--muted)', fontWeight:500 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map(b => (
+                    <tr key={b.id} style={{ borderBottom:'0.5px solid var(--border)' }}
+                      onMouseEnter={e => e.currentTarget.style.background='var(--bg)'}
+                      onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                      <td style={{ padding:'10px 16px', fontSize:12, fontFamily:'monospace' }}>{b.reference}</td>
+                      <td style={{ padding:'10px 16px', fontSize:12 }}>{b.company?.name ?? '—'}</td>
+                      <td style={{ padding:'10px 16px', fontSize:13 }}>{b.caller_name ?? '—'}</td>
+                      <td style={{ padding:'10px 16px', fontSize:12, color:'var(--muted)' }}>
+                        {b.pickup_datetime ? new Date(b.pickup_datetime).toLocaleDateString() : '—'}
+                      </td>
+                      <td style={{ padding:'10px 16px' }}>
+                        <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, fontWeight:500,
+                          background: b.status === 'completed' ? 'var(--green-bg)' : b.status === 'cancelled' ? 'var(--red-bg)' : b.status === 'on_trip' ? 'var(--accent-bg)' : 'var(--gray-bg)',
+                          color:      b.status === 'completed' ? 'var(--green)'    : b.status === 'cancelled' ? 'var(--red)'    : b.status === 'on_trip' ? 'var(--accent)'    : 'var(--gray)',
+                        }}>{b.status}</span>
+                      </td>
+                      <td style={{ padding:'10px 16px', fontSize:12, color:'var(--muted)' }}>
+                        {new Date(b.created).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* SYSTEM TAB */}
+      {tab === 'System' && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {health ? (
+            <>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:10 }}>
+                {[
+                  ['Backend',    health.backend,    health.backend    === 'operational'],
+                  ['PocketBase', health.pocketbase, health.pocketbase === 'operational'],
+                ].map(([name, status, ok]) => (
+                  <div key={name} style={{ background:'var(--surface)', border:'0.5px solid var(--border)', borderRadius:'var(--radius-lg)', padding:'18px 20px' }}>
+                    <p style={{ fontSize:12, color:'var(--muted)', marginBottom:6 }}>{name}</p>
+                    <p style={{ fontSize:15, fontWeight:500, color: ok ? 'var(--green)' : 'var(--red)' }}>
+                      {ok ? '● Operational' : '● ' + status}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize:12, color:'var(--muted)' }}>Checked at {new Date(health.timestamp).toLocaleTimeString()}</p>
+              <button onClick={loadHealth} style={{ width:'fit-content', fontSize:13 }}>Refresh health</button>
+            </>
+          ) : (
+            <p style={{ color:'var(--muted)' }}>Loading system status...</p>
+          )}
         </div>
       )}
 
+      {/* Modals */}
       {showAdd && (
         <Modal title="Add company" onClose={() => setShowAdd(false)}>
           <CompanyForm initial={emptyForm} onSave={createCompany} onCancel={() => setShowAdd(false)} saving={saving} error={error} isEdit={false} />
@@ -269,9 +444,28 @@ export default function CompaniesPage() {
       {editTarget && (
         <Modal title="Edit company" onClose={() => setEditTarget(null)}>
           <CompanyForm
-            initial={{ name:editTarget.name, slug:editTarget.slug, phone:editTarget.phone??'', email:editTarget.email??'', city:editTarget.city??'', plan:editTarget.plan??'starter', logo_url:editTarget.logo_url??'', vapi_assistant_id:editTarget.vapi_assistant_id??'', twilio_number:editTarget.twilio_number??'' }}
+            initial={{ name:editTarget.name??'', slug:editTarget.slug??'', phone:editTarget.phone??'', email:editTarget.email??'', city:editTarget.city??'', plan:editTarget.plan??'starter', vapi_assistant_id:editTarget.vapi_assistant_id??'', twilio_number:editTarget.twilio_number??'' }}
             onSave={updateCompany} onCancel={() => setEditTarget(null)} saving={saving} error={error} isEdit={true}
           />
+        </Modal>
+      )}
+
+      {planTarget && (
+        <Modal title={`Change plan — ${planTarget.name}`} onClose={() => setPlanTarget(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            <p style={{ fontSize:13, color:'var(--muted)' }}>Current plan: <strong>{planTarget.plan}</strong></p>
+            {['starter','professional','enterprise'].map(p => (
+              <button key={p} onClick={() => changePlan(planTarget.id, p)} disabled={saving || planTarget.plan === p}
+                style={{ padding:'10px 14px', fontSize:13, textAlign:'left',
+                  background: planTarget.plan === p ? 'var(--accent-bg)' : 'var(--surface)',
+                  color:      planTarget.plan === p ? 'var(--accent)'    : 'var(--text)',
+                  border:`0.5px solid ${planTarget.plan === p ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius:'var(--radius)', opacity: planTarget.plan === p ? 0.7 : 1,
+                }}>
+                {p.charAt(0).toUpperCase() + p.slice(1)}{planTarget.plan === p ? ' (current)' : ''}
+              </button>
+            ))}
+          </div>
         </Modal>
       )}
     </div>

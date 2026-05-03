@@ -2,6 +2,13 @@
  * formatters.js — display helpers used across all dashboard pages
  */
 
+export const CURRENCY_SYMBOLS = { NGN: '₦', USD: '$', GBP: '£', EUR: '€' };
+
+export function formatPrice(amount, currency = 'NGN') {
+  if (!amount && amount !== 0) return '—';
+  return `${CURRENCY_SYMBOLS[currency] ?? ''}${Number(amount).toLocaleString()}`;
+}
+
 export function formatDatetime(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleString('en-NG', {

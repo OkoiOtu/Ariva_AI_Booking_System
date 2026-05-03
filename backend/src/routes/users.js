@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
             upgrade: true,
           });
         }
-      } catch {}
+      } catch (err) { console.warn('[users] plan limit check failed:', err.message); }
     }
 
     const { full_name, email, password, role } = req.body;
