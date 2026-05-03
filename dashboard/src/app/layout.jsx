@@ -21,7 +21,6 @@ const NAV = [
   { href:'/drivers',   label:'Drivers',       icon:'airline_seat_recline_normal' },
   { href:'/pricing',   label:'Pricing',       icon:'payments'                    },
   { href:'/users',       label:'Users',         icon:'group',    adminOnly:true    },
-  { href:'/companies',   label:'Companies',     icon:'domain',   authorOnly:true },
 ];
 
 const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout'];
