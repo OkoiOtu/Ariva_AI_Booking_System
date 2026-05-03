@@ -201,7 +201,7 @@ migrate((app) => {
         "type": "autodate"
       }
     ],
-    "id": "pbc_phone_numbers_01",
+    "id": "pbc_1000000002",
     "indexes": [
       "CREATE UNIQUE INDEX idx_phone_numbers_number ON phone_numbers (number)"
     ],
@@ -215,6 +215,6 @@ migrate((app) => {
 
   return app.save(collection);
 }, (app) => {
-  const collection = app.findCollectionByNameOrId("pbc_phone_numbers_01");
+  const collection = app.findCollectionByNameOrId("phone_numbers");
   return app.delete(collection);
 });

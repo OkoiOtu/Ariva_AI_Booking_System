@@ -47,6 +47,10 @@ app.use('/payments/webhook', express.raw({ type: '*/*' }));
 
 app.use(express.json());
 
+// Railway (and other PaaS) sit behind a reverse proxy that injects X-Forwarded-For.
+// Without this, express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+app.set('trust proxy', 1);
+
 // Rate limiting — brute-force protection on auth endpoints
 const authLimiter = rateLimit({
   windowMs: 60 * 1000, max: 10,
