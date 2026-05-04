@@ -192,6 +192,6 @@ export async function syncDriverStatuses() {
       }
     }
   } catch (err) {
-    console.error('[driverService] syncDriverStatuses error:', err.message);
+    console.error('[driverService] syncDriverStatuses error:', err.status, err.message, JSON.stringify(err.data ?? {}));
   }
 }

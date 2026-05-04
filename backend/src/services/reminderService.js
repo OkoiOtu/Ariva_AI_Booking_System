@@ -63,6 +63,6 @@ export async function sendReminders() {
       }
     }
   } catch (err) {
-    console.error('[reminders] sendReminders error:', err.message);
+    console.error('[reminders] sendReminders error:', err.status, err.message, JSON.stringify(err.data ?? {}));
   }
 }

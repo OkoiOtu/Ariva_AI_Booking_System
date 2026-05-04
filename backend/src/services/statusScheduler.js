@@ -39,7 +39,7 @@ async function tick() {
         filter: 'status = "confirmed"', requestKey: null,
       });
     } catch (err) {
-      console.error('[scheduler] confirmed query error:', err.message);
+      console.error('[scheduler] confirmed query error:', err.status, err.message, JSON.stringify(err.data ?? {}));
     }
 
     for (const b of allConfirmed) {
@@ -63,7 +63,7 @@ async function tick() {
         filter: 'status = "on_trip"', requestKey: null,
       });
     } catch (err) {
-      console.error('[scheduler] on_trip query error:', err.message);
+      console.error('[scheduler] on_trip query error:', err.status, err.message, JSON.stringify(err.data ?? {}));
     }
 
     for (const b of allOnTrip) {
