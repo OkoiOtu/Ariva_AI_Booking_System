@@ -71,6 +71,11 @@ function UserForm({ initial, onSave, onCancel, saving, error, isEdit, canSetSupe
         </div>
       )}
       <div>
+        <label style={{ fontSize:12, color:'var(--muted)', display:'block', marginBottom:4 }}>Phone number (for booking alerts)</label>
+        <input type="tel" value={form.phone ?? ''} onChange={f('phone')} placeholder="+234..." style={s} />
+        <p style={{ fontSize:11, color:'var(--muted)', marginTop:3 }}>Receives SMS when a customer books or cancels.</p>
+      </div>
+      <div>
         <label style={{ fontSize:12, color:'var(--muted)', display:'block', marginBottom:4 }}>Role</label>
         <select value={form.role} onChange={f('role')} style={s}>
           {roleOptions.map(([val, label]) => (
@@ -106,7 +111,7 @@ export default function UsersPage() {
   const [error, setError]           = useState('');
   const [saving, setSaving]         = useState(false);
 
-  const emptyForm = { full_name:'', email:'', password:'', role:'user' };
+  const emptyForm = { full_name:'', email:'', password:'', phone:'', role:'user' };
 
   async function load() {
     setLoading(true);
@@ -139,6 +144,7 @@ export default function UsersPage() {
       const payload = {};
       if (form.full_name !== undefined) payload.full_name = form.full_name;
       if (form.email)                   payload.email     = form.email;
+      if (form.phone  !== undefined)    payload.phone     = form.phone;
       if (form.role)                    payload.role      = form.role;
       const res = await api(`/users/${editTarget.id}`, {
         method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
@@ -213,7 +219,7 @@ export default function UsersPage() {
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:780 }}>
             <thead>
               <tr style={{ borderBottom:'0.5px solid var(--border)' }}>
-                {['User','Email','Role','Status','Joined',...(isAdmin ? ['Actions'] : [])].map(h => (
+                {['User','Email','Phone','Role','Status','Joined',...(isAdmin ? ['Actions'] : [])].map(h => (
                   <th key={h} style={{ textAlign:'left', padding:'8px 16px', fontSize:12, color:'var(--muted)', fontWeight:500, whiteSpace:'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -245,6 +251,13 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td style={{ padding:'10px 16px', color:'var(--muted)', fontSize:13 }}>{u.email}</td>
+                    <td style={{ padding:'10px 16px', color:'var(--muted)', fontSize:13 }}>
+                      {u.phone ? (
+                        <span title="Receives booking SMS alerts">📱 {u.phone}</span>
+                      ) : (
+                        <span style={{ color:'var(--border)' }}>—</span>
+                      )}
+                    </td>
                     <td style={{ padding:'10px 16px' }}>
                       <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, fontWeight:500, background:roleMeta.bg, color:roleMeta.color }}>
                         {roleMeta.label}
@@ -307,7 +320,7 @@ export default function UsersPage() {
       {editTarget && (
         <Modal title="Edit user" onClose={() => setEditTarget(null)}>
           <UserForm
-            initial={{ full_name:editTarget.full_name??'', email:editTarget.email, role:editTarget.role??'user', password:'' }}
+            initial={{ full_name:editTarget.full_name??'', email:editTarget.email, phone:editTarget.phone??'', role:editTarget.role??'user', password:'' }}
             onSave={updateUser} onCancel={() => setEditTarget(null)}
             saving={saving} error={error} isEdit={true}
             canSetSuperAdmin={currentUser?.role === 'author'}

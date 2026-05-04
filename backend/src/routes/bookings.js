@@ -1,7 +1,7 @@
 import express from 'express';
 import { getClient } from '../services/pbService.js';
 import { buildFilter } from '../middleware/companyScope.js';
-import { sendCancellationSMS } from '../services/smsService.js';
+import { sendCancellationSMS, sendAdminCancellationAlert } from '../services/smsService.js';
 import { logActivity } from '../services/activityLogger.js';
 import { generateBookingRef } from '../utils/bookingUtils.js';
 import { generateInvoicePDF } from '../services/invoiceService.js';
@@ -138,7 +138,12 @@ router.post('/:id/cancel', async (req, res) => {
       return res.status(400).json({ error: `Booking is already ${booking.status}.` });
     await pb.collection('bookings').update(req.params.id, { status:'cancelled' }, { requestKey:null });
     await logActivity('booking_cancelled', req.body.actor ?? 'admin', `Booking ${booking.reference} cancelled from dashboard`, req.companyId);
-    try { await sendCancellationSMS(booking); } catch (err) { console.error('[bookings] cancellation SMS failed:', err.message); }
+    try {
+      await Promise.all([
+        sendCancellationSMS(booking),
+        sendAdminCancellationAlert(booking, booking.company_id),
+      ]);
+    } catch (err) { console.error('[bookings] cancellation SMS failed:', err.message); }
     res.json({ success: true });
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: 'Booking not found.' });
@@ -184,6 +189,7 @@ router.post('/cancel', async (req, res) => {
     if (['completed','cancelled'].includes(booking.status))
       return res.status(400).json({ error: `Already ${booking.status}.` });
     await pb.collection('bookings').update(booking.id, { status:'cancelled' });
+    try { await sendAdminCancellationAlert(booking, booking.company_id); } catch {}
     res.json({ success: true, reference });
   } catch (err) {
     res.status(500).json({ error: 'Failed to cancel booking.' });

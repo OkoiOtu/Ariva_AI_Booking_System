@@ -20,6 +20,7 @@ router.get('/', async (req, res) => {
       id:         u.id,
       email:      u.email,
       full_name:  u.full_name ?? '',
+      phone:      u.phone ?? '',
       role:       u.role ?? 'user',
       suspended:  u.suspended ?? false,
       company_id: u.company_id ?? '',
@@ -61,7 +62,7 @@ router.post('/', async (req, res) => {
       } catch (err) { console.warn('[users] plan limit check failed:', err.message); }
     }
 
-    const { full_name, email, password, role } = req.body;
+    const { full_name, email, password, role, phone } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
     if (!full_name?.trim()) return res.status(400).json({ error: 'Full name is required.' });
 
@@ -80,11 +81,12 @@ router.post('/', async (req, res) => {
       password,
       passwordConfirm: password,
       full_name:       full_name.trim(),
+      phone:           phone?.trim() ?? '',
       role:            userRole,
-      company_id:      req.companyId || '',  // ← inherit company from request
+      company_id:      req.companyId || '',
       suspended:       false,
       emailVisibility: true,
-      verified:        true,  // Admin-created users don't need email verification
+      verified:        true,
     }, { requestKey: null });
 
     res.json({
@@ -108,7 +110,7 @@ router.post('/', async (req, res) => {
  * PATCH /users/:id
  */
 router.patch('/:id', async (req, res) => {
-  const ALLOWED = ['full_name', 'email', 'role', 'suspended'];
+  const ALLOWED = ['full_name', 'email', 'phone', 'role', 'suspended'];
   try {
     const pb = await getClient();
 
@@ -128,6 +130,7 @@ router.patch('/:id', async (req, res) => {
       id:        updated.id,
       email:     updated.email,
       full_name: updated.full_name,
+      phone:     updated.phone ?? '',
       role:      updated.role,
       suspended: updated.suspended,
     });

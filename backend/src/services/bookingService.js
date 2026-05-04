@@ -152,7 +152,7 @@ async function handleConfirmedBooking(callRecord, data, callerPhone, vehicleType
   try {
     await Promise.all([
       sendCustomerConfirmation({ ...booking, callerPhone, cancelToken, quotedPrice, quotedCurrency }),
-      sendAdminAlert({ ...booking, callerPhone }),
+      sendAdminAlert({ ...booking, callerPhone }, companyId),
     ]);
     await markSmsSent(booking.id);
   } catch (err) {
@@ -170,7 +170,7 @@ async function handleLead(callRecord, data, callerPhone, reason, companyId = nul
   console.info(`[bookingService] Call logged as lead. Reason: ${reason}`);
 
   try {
-    await sendAdminAlert({ isLead: true, callerPhone, summary, callId: callRecord.id });
+    await sendAdminAlert({ isLead: true, callerPhone, summary, callId: callRecord.id }, companyId);
   } catch (err) {
     console.error('[bookingService] Admin lead alert failed:', err.message);
   }

@@ -3,7 +3,7 @@ import { getClient } from './pbService.js';
 
 const client   = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const FROM     = process.env.TWILIO_PHONE_NUMBER;
-const DASH_URL = process.env.DASHBOARD_URL ?? 'https://yourdashboard.com';
+const DASH_URL = process.env.DASHBOARD_URL ?? 'https://ariva-dashboard.up.railway.app';
 
 const SETTINGS_KEY = 'notification_settings';
 const DEFAULTS = {
@@ -12,12 +12,11 @@ const DEFAULTS = {
   sms_reminder_1hr:      true,
   sms_admin_new_booking: true,
   sms_admin_new_lead:    true,
-  admin_phone_override:  '',
 };
 
 async function getSettings() {
   try {
-    const pb = await getClient();
+    const pb     = await getClient();
     const record = await pb.collection('app_settings').getFirstListItem(
       `key = "${SETTINGS_KEY}"`, { requestKey: null }
     );
@@ -27,25 +26,54 @@ async function getSettings() {
   }
 }
 
-function getAdminPhone(settings) {
-  return settings.admin_phone_override || process.env.ADMIN_PHONE_NUMBER;
+/**
+ * Returns phone numbers of all active super_admin and admin users for a company.
+ * Used to fan-out booking/lead alert SMS to every team member who has a phone set.
+ */
+async function getCompanyAdminPhones(companyId) {
+  if (!companyId) return [];
+  try {
+    const pb    = await getClient();
+    const users = await pb.collection('users').getFullList({
+      filter:     `company_id = "${companyId}" && suspended = false`,
+      requestKey: null,
+    });
+    return users
+      .filter(u => ['super_admin', 'admin'].includes(u.role) && u.phone?.trim())
+      .map(u => u.phone.trim());
+  } catch (err) {
+    console.error('[smsService] getCompanyAdminPhones error:', err.message);
+    return [];
+  }
+}
+
+async function blast(phones, body) {
+  if (!phones.length || !FROM) return;
+  await Promise.all(
+    phones.map(to =>
+      client.messages.create({ body, from: FROM, to }).catch(err =>
+        console.error('[smsService] blast failed to', to, ':', err.message)
+      )
+    )
+  );
 }
 
 export async function smsPlain(to, body) {
-  if (!to || !body) return;
+  if (!to || !body || !FROM) return;
   return client.messages.create({ body, from: FROM, to }).catch(err =>
     console.error('[smsService] smsPlain failed:', err.message)
   );
 }
 
 export async function sendCustomerConfirmation(booking) {
+  if (!FROM) return;
   const settings = await getSettings();
   if (!settings.sms_booking_confirmed) return;
 
   const cancelLink = `${DASH_URL}/cancel/${booking.reference}?token=${booking.cancelToken}`;
-  const symbols    = { NGN:'₦', USD:'$', GBP:'£', EUR:'€' };
+  const symbols    = { NGN: '₦', USD: '$', GBP: '£', EUR: '€' };
   const priceStr   = booking.quotedPrice
-    ? `Price: ${symbols[booking.quotedCurrency]??''}${Number(booking.quotedPrice).toLocaleString()}`
+    ? `Price: ${symbols[booking.quotedCurrency] ?? ''}${Number(booking.quotedPrice).toLocaleString()}`
     : 'Price: To be confirmed';
 
   const body = [
@@ -64,6 +92,7 @@ export async function sendCustomerConfirmation(booking) {
 }
 
 export async function sendCancellationSMS(booking) {
+  if (!FROM) return;
   const settings = await getSettings();
   if (!settings.sms_booking_cancelled) return;
 
@@ -79,16 +108,28 @@ export async function sendCancellationSMS(booking) {
   }
 }
 
-export async function sendAdminAlert(payload) {
+export async function sendAdminAlert(payload, companyId) {
   const settings = await getSettings();
-  const adminPhone = getAdminPhone(settings);
-  if (!adminPhone) return;
-
-  if (payload.isLead && !settings.sms_admin_new_lead) return;
+  if (payload.isLead && !settings.sms_admin_new_lead)    return;
   if (!payload.isLead && !settings.sms_admin_new_booking) return;
 
-  const body = payload.isLead ? buildLeadAlert(payload) : buildBookingAlert(payload);
-  return client.messages.create({ body, from: FROM, to: adminPhone });
+  const phones = await getCompanyAdminPhones(companyId);
+  const body   = payload.isLead ? buildLeadAlert(payload) : buildBookingAlert(payload);
+  await blast(phones, body);
+}
+
+export async function sendAdminCancellationAlert(booking, companyId) {
+  const phones = await getCompanyAdminPhones(companyId);
+  if (!phones.length) return;
+
+  const body = [
+    `Booking cancelled — ${booking.reference}`,
+    `Customer: ${booking.caller_name} (${booking.caller_phone})`,
+    `Was: ${formatDatetime(booking.pickup_datetime)}`,
+    `${DASH_URL}/bookings`,
+  ].join('\n');
+
+  await blast(phones, body);
 }
 
 function buildBookingAlert(booking) {
@@ -103,7 +144,7 @@ function buildBookingAlert(booking) {
   ].join('\n');
 }
 
-function buildLeadAlert({ callerPhone, summary, callId }) {
+function buildLeadAlert({ callerPhone, summary }) {
   return [
     `New lead — needs review`,
     `Phone: ${callerPhone}`,
@@ -115,6 +156,6 @@ function buildLeadAlert({ callerPhone, summary, callId }) {
 function formatDatetime(iso) {
   if (!iso) return 'N/A';
   return new Date(iso).toLocaleString('en-NG', {
-    weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit',
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 }

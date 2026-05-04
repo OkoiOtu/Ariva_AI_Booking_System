@@ -99,7 +99,7 @@ router.post('/bookings/widget', async (req, res) => {
       const { sendCustomerConfirmation, sendAdminAlert } = await import('../services/smsService.js');
       await Promise.all([
         sendCustomerConfirmation({ ...booking, callerPhone: caller_phone, cancelToken }),
-        sendAdminAlert({ ...booking, callerPhone: caller_phone }),
+        sendAdminAlert({ ...booking, callerPhone: caller_phone }, company.id),
       ]);
       await pb.collection('bookings').update(booking.id, { sms_sent: true }, { requestKey: null });
     } catch (smsErr) {
