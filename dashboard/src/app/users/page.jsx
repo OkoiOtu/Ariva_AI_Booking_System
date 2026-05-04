@@ -42,15 +42,14 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }) {
   );
 }
 
-function UserForm({ initial, onSave, onCancel, saving, error, isEdit, canSetSuperAdmin }) {
+function UserForm({ initial, onSave, onCancel, saving, error, isEdit, canSetSuperAdmin, isSuperAdmin }) {
   const [form, setForm] = useState(initial);
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
   const s = { width:'100%', padding:'7px 10px', fontSize:13 };
 
-  // Role options based on creator's role
   const roleOptions = canSetSuperAdmin
     ? [['super_admin','Super admin'],['admin','Admin'],['user','User']]
-    : currentUser?.role === 'super_admin'
+    : isSuperAdmin
       ? [['admin','Admin'],['user','User']]
       : [['user','User']];
 
@@ -312,6 +311,7 @@ export default function UsersPage() {
             onCancel={() => setShowAdd(false)}
             saving={saving} error={error} isEdit={false}
             canSetSuperAdmin={currentUser?.role === 'author'}
+            isSuperAdmin={isSuperAdmin}
           />
         </Modal>
       )}
@@ -324,6 +324,7 @@ export default function UsersPage() {
             onSave={updateUser} onCancel={() => setEditTarget(null)}
             saving={saving} error={error} isEdit={true}
             canSetSuperAdmin={currentUser?.role === 'author'}
+            isSuperAdmin={isSuperAdmin}
           />
         </Modal>
       )}
