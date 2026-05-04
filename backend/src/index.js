@@ -132,12 +132,14 @@ app.use('/phone-numbers', phoneNumbersRouter);
 
 app.listen(PORT, async () => {
   console.info(`[server] Running on port ${PORT}`);
+  // Start background services unconditionally — each one calls getClient()
+  // internally and will retry auth once PocketBase is available.
+  startTokenRefresh();
+  startStatusScheduler();
   try {
     await getClient();
-    startTokenRefresh();
-    startStatusScheduler();
     console.info('[server] All services ready');
   } catch (err) {
-    console.error('[server] Startup failed:', err.message);
+    console.warn('[server] PocketBase not ready at startup — will retry on first request:', err.message);
   }
 });

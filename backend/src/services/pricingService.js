@@ -63,7 +63,7 @@ export async function calculatePrice({ pickupAddress, dropoffAddress, durationHo
 
     if (vehicleRule) {
       return {
-        price:    vehicleRule.price_per_hour * durationHours,
+        price:    Number(vehicleRule.price_per_hour) * durationHours,
         ruleName: vehicleRule.name,
         ruleType: 'hourly',
         currency: vehicleRule.currency || 'NGN',
@@ -75,7 +75,7 @@ export async function calculatePrice({ pickupAddress, dropoffAddress, durationHo
 
     if (defaultRule) {
       return {
-        price:    defaultRule.price_per_hour * durationHours,
+        price:    Number(defaultRule.price_per_hour) * durationHours,
         ruleName: defaultRule.name,
         ruleType: 'hourly',
         currency: defaultRule.currency || 'NGN',
