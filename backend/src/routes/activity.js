@@ -35,6 +35,7 @@ router.post('/', async (req, res) => {
     );
     res.json(entry);
   } catch (err) {
+    console.error('[activity] POST error:', err.message);
     res.status(500).json({ error: 'Failed to write activity log' });
   }
 });

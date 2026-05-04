@@ -137,6 +137,7 @@ async function handleConfirmedBooking(callRecord, data, callerPhone, vehicleType
     quoted_currency: quotedCurrency,
     pricing_rule:    pricingRule,
     vehicle_type:    vehicleType !== 'any' ? vehicleType : '',
+    flight_number:   structured.flightNumber ?? '',
     sms_sent:        false,
     call:            callRecord.id,
   };

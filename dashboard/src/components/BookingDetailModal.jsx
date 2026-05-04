@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { formatDatetime, formatDuration, formatPhone } from '@/lib/formatters';
+import { formatDatetime, formatDuration, formatPhone, CURRENCY_SYMBOLS } from '@/lib/formatters';
 import StatusBadge from './StatusBadge';
 import { api } from '@/lib/api';
 
@@ -8,11 +8,29 @@ export default function BookingDetailModal({ booking, onClose, onCancelled }) {
   const [cancelling,        setCancelling]        = useState(false);
   const [cancelError,       setCancelError]       = useState('');
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [downloading,       setDownloading]       = useState(false);
+  const [invoiceError,      setInvoiceError]      = useState('');
 
-  const symbols = { NGN:'₦', USD:'$', GBP:'£', EUR:'€' };
   const priceDisplay = booking.quoted_price
-    ? `${symbols[booking.quoted_currency] ?? ''}${Number(booking.quoted_price).toLocaleString()} (${booking.pricing_rule ?? 'matched rule'})`
+    ? `${CURRENCY_SYMBOLS[booking.quoted_currency] ?? ''}${Number(booking.quoted_price).toLocaleString()} (${booking.pricing_rule ?? 'matched rule'})`
     : 'To be confirmed';
+
+  async function downloadInvoice() {
+    setDownloading(true); setInvoiceError('');
+    try {
+      const res = await api(`/bookings/${booking.id}/invoice`);
+      if (!res.ok) throw new Error('Failed to generate invoice');
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `invoice-${booking.reference}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setInvoiceError(err.message ?? 'Download failed');
+    } finally { setDownloading(false); }
+  }
 
   const fields = [
     { label:'Reference',      value: booking.reference },
@@ -95,7 +113,16 @@ export default function BookingDetailModal({ booking, onClose, onCancelled }) {
             )}
             {cancelError && <p style={{ fontSize:12, color:'var(--red)', marginTop:4 }}>{cancelError}</p>}
           </div>
-          <button onClick={onClose}>Close</button>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            {booking.status === 'completed' && (
+              <button onClick={downloadInvoice} disabled={downloading} style={{ fontSize:12, display:'flex', alignItems:'center', gap:4 }}>
+                <span className="material-symbols-outlined" style={{ fontSize:15 }}>download</span>
+                {downloading ? 'Generating...' : 'Download invoice'}
+              </button>
+            )}
+            {invoiceError && <span style={{ fontSize:12, color:'var(--red)' }}>{invoiceError}</span>}
+            <button onClick={onClose}>Close</button>
+          </div>
         </div>
       </div>
     </>

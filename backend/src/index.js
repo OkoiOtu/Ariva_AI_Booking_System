@@ -17,6 +17,7 @@ import authRouter         from './routes/auth.js';
 import paymentsRouter     from './routes/payments.js';
 import adminRouter        from './routes/admin.js';
 import phoneNumbersRouter from './routes/phoneNumbers.js';
+import publicRouter       from './routes/public.js';
 import { companyScope }   from './middleware/companyScope.js';
 import { requireAuth }    from './middleware/requireAuth.js';
 import rateLimit          from 'express-rate-limit';
@@ -129,6 +130,7 @@ app.use('/auth',         authRouter);
 app.use('/payments',     paymentsRouter);
 app.use('/admin',        adminRouter);
 app.use('/phone-numbers', phoneNumbersRouter);
+app.use('/public',        publicRouter);
 
 app.listen(PORT, async () => {
   console.info(`[server] Running on port ${PORT}`);

@@ -4,6 +4,7 @@ import { buildFilter } from '../middleware/companyScope.js';
 import { sendCancellationSMS } from '../services/smsService.js';
 import { logActivity } from '../services/activityLogger.js';
 import { generateBookingRef } from '../utils/bookingUtils.js';
+import { generateInvoicePDF } from '../services/invoiceService.js';
 
 const PLAN_LIMITS = { starter: 50, professional: Infinity, enterprise: Infinity };
 
@@ -106,7 +107,7 @@ const VALID_TRANSITIONS = {
 };
 
 router.patch('/:id', async (req, res) => {
-  const ALLOWED = ['caller_name','caller_phone','pickup_datetime','pickup_address','dropoff_address','duration_hours','status','driver'];
+  const ALLOWED = ['caller_name','caller_phone','pickup_datetime','pickup_address','dropoff_address','duration_hours','status','driver','customer_email','flight_number','notes'];
   try {
     const pb      = await getClient();
     const booking = await pb.collection('bookings').getOne(req.params.id, { requestKey:null });
@@ -142,6 +143,30 @@ router.post('/:id/cancel', async (req, res) => {
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: 'Booking not found.' });
     res.status(500).json({ error: 'Failed to cancel booking.' });
+  }
+});
+
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const pb      = await getClient();
+    const booking = await pb.collection('bookings').getOne(req.params.id, { requestKey:null });
+    if (req.companyId && booking.company_id !== req.companyId)
+      return res.status(403).json({ error: 'Access denied' });
+
+    let company = null;
+    if (booking.company_id) {
+      company = await pb.collection('companies').getOne(booking.company_id, { requestKey:null }).catch(() => null);
+    }
+
+    const pdfBuffer = await generateInvoicePDF(booking, company);
+    const filename  = `invoice-${booking.reference}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    if (err.status === 404) return res.status(404).json({ error: 'Booking not found' });
+    console.error('[bookings] invoice error:', err.message);
+    res.status(500).json({ error: 'Failed to generate invoice' });
   }
 });
 

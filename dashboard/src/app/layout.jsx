@@ -23,7 +23,7 @@ const NAV = [
   { href:'/users',       label:'Users',         icon:'group',    adminOnly:true    },
 ];
 
-const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout'];
+const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout', '/widget'];
 const LANDING_PATH = '/';
 
 function isAdmin(user) {

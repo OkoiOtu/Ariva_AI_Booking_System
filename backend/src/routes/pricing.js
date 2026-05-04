@@ -33,13 +33,17 @@ router.post('/', async (req, res) => {
   }
 });
 
+const PRICING_PATCH_ALLOWED = ['name','route_from','route_to','vehicle_type','price_per_hour','flat_rate','min_hours','max_hours','active','currency'];
+
 router.patch('/:id', async (req, res) => {
   try {
     const pb   = await getClient();
     const rule = await pb.collection('pricing_rules').getOne(req.params.id, { requestKey: null });
     if (req.companyId && rule.company_id !== req.companyId)
       return res.status(403).json({ error: 'Access denied' });
-    const updated = await pb.collection('pricing_rules').update(req.params.id, req.body);
+    const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => PRICING_PATCH_ALLOWED.includes(k)));
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'No valid fields' });
+    const updated = await pb.collection('pricing_rules').update(req.params.id, updates);
     res.json(updated);
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: 'Rule not found' });

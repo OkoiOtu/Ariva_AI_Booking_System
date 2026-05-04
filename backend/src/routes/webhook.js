@@ -1,4 +1,4 @@
-import express from 'express';
+import express               from 'express';
 import { processCall }          from '../services/bookingService.js';
 import { validateVapiWebhook }  from '../middleware/validateWebhook.js';
 import { getClient }            from '../services/pbService.js';
@@ -57,6 +57,39 @@ router.post('/vapi', validateVapiWebhook, async (req, res) => {
       stack:  err.stack,
     });
   }
+});
+
+/**
+ * POST /webhook/sms
+ *
+ * Twilio forwards inbound SMS replies here.
+ * Handles STOP/UNSUBSCRIBE opt-out for re-engagement campaigns.
+ * Body is application/x-www-form-urlencoded.
+ */
+const STOP_WORDS = new Set(['STOP','STOPALL','UNSUBSCRIBE','CANCEL','END','QUIT']);
+
+router.post('/sms', express.urlencoded({ extended: false }), async (req, res) => {
+  const body  = (req.body?.Body  || '').trim().toUpperCase();
+  const from  = (req.body?.From  || '').trim();
+
+  if (from && STOP_WORDS.has(body)) {
+    try {
+      const pb = await getClient();
+      const exists = await pb.collection('opted_out_phones')
+        .getFirstListItem(`phone = "${esc(from)}"`, { requestKey: null })
+        .then(() => true).catch(() => false);
+      if (!exists) {
+        await pb.collection('opted_out_phones').create({ phone: from }, { requestKey: null });
+      }
+      console.info(`[webhook/sms] ${from} opted out via STOP`);
+    } catch (err) {
+      console.error('[webhook/sms] opt-out error:', err.message);
+    }
+  }
+
+  // TwiML response — empty reply so Twilio doesn't send an auto-reply
+  res.set('Content-Type', 'text/xml');
+  res.send('<Response></Response>');
 });
 
 export default router;

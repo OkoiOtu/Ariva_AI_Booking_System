@@ -85,6 +85,8 @@ router.patch('/:id', async (req, res) => {
   const ALLOWED = [
     'name', 'phone', 'email', 'city', 'plan', 'active', 'logo_url',
     'vapi_assistant_id', 'twilio_number', 'twilio_sid', 'twilio_token',
+    'review_request_enabled', 'review_request_delay_mins',
+    'reengagement_enabled', 'reengagement_days', 'reengagement_message',
   ];
   try {
     const pb      = await getClient();

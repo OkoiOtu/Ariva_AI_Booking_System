@@ -2,7 +2,10 @@ import { getClient }           from './pbService.js';
 import { logActivity }         from './activityLogger.js';
 import { syncDriverStatuses }  from './driverService.js';
 import { sendReminders }       from './reminderService.js';
-import { deprovisionCalling }  from './phoneNumberService.js';
+import { sendReviewRequests }  from './reviewService.js';
+import { checkFlightDelays }        from './flightService.js';
+import { runReengagementCampaign }  from './reengagementService.js';
+import { deprovisionCalling }       from './phoneNumberService.js';
 
 /**
  * Runs every 60 seconds and auto-advances booking statuses:
@@ -19,7 +22,9 @@ import { deprovisionCalling }  from './phoneNumberService.js';
  * pickup_datetime to a future time to test the flow correctly.
  */
 
-let _lastExpiryCheck = 0; // track last daily expiry check
+let _lastExpiryCheck      = 0;
+let _tickCount             = 0;
+let _lastReengagementDate  = '';
 
 export function startStatusScheduler() {
   console.info('[scheduler] Status scheduler started (60s interval)');
@@ -28,6 +33,7 @@ export function startStatusScheduler() {
 }
 
 async function tick() {
+  _tickCount++;
   try {
     const pb  = await getClient();
     const now = new Date();
@@ -73,7 +79,7 @@ async function tick() {
 
       if (now >= completedAt) {
         try {
-          await pb.collection('bookings').update(b.id, { status: 'completed' });
+          await pb.collection('bookings').update(b.id, { status: 'completed', completed_at: now.toISOString() });
           await logActivity('completed', b.caller_phone, `Trip completed for ${b.reference}`);
           console.info(`[scheduler] ${b.reference} → completed`);
         } catch (err) {
@@ -84,6 +90,21 @@ async function tick() {
 
     // Send 1-hour pickup reminders
     await sendReminders();
+
+    // Send post-trip review request SMS
+    await sendReviewRequests();
+
+    // Check for flight delays every 10 minutes (AviationStack free tier: 100 req/month)
+    if (_tickCount % 10 === 0) {
+      await checkFlightDelays();
+    }
+
+    // Re-engagement campaign — runs once daily at 10 AM
+    const today = now.toISOString().slice(0, 10);
+    if (now.getHours() === 10 && _lastReengagementDate !== today) {
+      _lastReengagementDate = today;
+      await runReengagementCampaign();
+    }
 
     // Sync driver statuses with booking statuses
     await syncDriverStatuses();
