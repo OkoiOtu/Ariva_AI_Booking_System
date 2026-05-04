@@ -339,14 +339,37 @@ export default function SettingsPage() {
 
         {!isPro ? (
           <div style={{ position:'relative', borderRadius:'var(--radius-lg)', overflow:'hidden', background:'var(--surface)', border:'0.5px solid var(--border)' }}>
-            <div style={{ padding:'40px 24px', filter:'blur(2px)', pointerEvents:'none', userSelect:'none', color:'var(--muted)', fontSize:13 }}>
-              AI agent settings preview...
+            {/* Blurred preview rows — give the card realistic height */}
+            <div style={{ filter:'blur(3px)', pointerEvents:'none', userSelect:'none' }}>
+              {[
+                ['Agent name', 'Aria'],
+                ['Custom greeting', 'Welcome to us, how can I help?'],
+                ['Service area', 'Lagos and surrounding areas'],
+                ['Ask for flight number', ''],
+                ['Ask for customer email', ''],
+                ['Quote prices on call', ''],
+                ['Ask for special requests', ''],
+                ['Minimum booking duration', '1 hr'],
+                ['Advance notice required', '2 hrs'],
+                ['Languages', 'English'],
+              ].map(([label, val], i, arr) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px', borderBottom: i < arr.length - 1 ? '0.5px solid var(--border)' : 'none', gap:16 }}>
+                  <div>
+                    <p style={{ fontSize:14, fontWeight:500, color:'var(--text)' }}>{label}</p>
+                  </div>
+                  {val
+                    ? <span style={{ fontSize:13, color:'var(--muted)' }}>{val}</span>
+                    : <div style={{ width:36, height:20, borderRadius:10, background:'var(--border)' }} />
+                  }
+                </div>
+              ))}
             </div>
-            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(var(--bg-rgb, 255,255,255),0.85)', backdropFilter:'blur(4px)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize:32, color:'var(--muted)', marginBottom:8 }}>lock</span>
-              <p style={{ fontSize:14, fontWeight:500, marginBottom:6 }}>Professional plan required</p>
-              <p style={{ fontSize:13, color:'var(--muted)', marginBottom:16 }}>Upgrade to customise your AI agent</p>
-              <a href="/plans" style={{ fontSize:13, padding:'8px 20px', background:'var(--accent)', color:'#fff', borderRadius:'var(--radius)', textDecoration:'none' }}>View plans →</a>
+            {/* Lock overlay */}
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(var(--bg-rgb, 255,255,255),0.82)', backdropFilter:'blur(4px)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize:36, color:'var(--muted)', marginBottom:10 }}>lock</span>
+              <p style={{ fontSize:15, fontWeight:600, marginBottom:6 }}>Professional plan required</p>
+              <p style={{ fontSize:13, color:'var(--muted)', marginBottom:20, textAlign:'center', maxWidth:260 }}>Upgrade to customise your AI agent, set business hours, and manage call behaviour.</p>
+              <a href="/plans" style={{ fontSize:13, padding:'9px 24px', background:'var(--accent)', color:'#fff', borderRadius:'var(--radius)', textDecoration:'none', fontWeight:500 }}>View plans →</a>
             </div>
           </div>
         ) : (
