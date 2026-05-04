@@ -76,6 +76,11 @@ router.post('/register', async (req, res) => {
       phone:  phone ?? '',
       plan,
       active: true,
+      // AI voice agent defaults — user can adjust in Settings
+      ai_ask_email:    true,
+      ai_ask_flight:   false,
+      ai_ask_special_req: true,
+      ai_quote_prices: true,
     }, { requestKey: null });
 
     // 4. Create user linked to company

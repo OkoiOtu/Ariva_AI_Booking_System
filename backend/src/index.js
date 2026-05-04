@@ -55,6 +55,7 @@ app.set('trust proxy', 1);
 const authLimiter = rateLimit({
   windowMs: 60 * 1000, max: 10,
   standardHeaders: true, legacyHeaders: false,
+  validate: { xForwardedForHeader: false }, // Railway proxy sets X-Forwarded-For
   message: { error: 'Too many requests — try again in a minute' },
 });
 app.use('/auth', authLimiter);

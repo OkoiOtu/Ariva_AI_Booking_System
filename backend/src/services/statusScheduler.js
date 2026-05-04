@@ -33,26 +33,38 @@ async function tick() {
     const now = new Date();
 
     // ── confirmed → on_trip ───────────────────────────────────────────────
-    // Only advance bookings whose pickup time has arrived
-    const allConfirmed = await pb.collection('bookings').getFullList({
-      filter: 'status = "confirmed"', requestKey: null,
-    });
+    let allConfirmed = [];
+    try {
+      allConfirmed = await pb.collection('bookings').getFullList({
+        filter: 'status = "confirmed"', requestKey: null,
+      });
+    } catch (err) {
+      console.error('[scheduler] confirmed query error:', err.message);
+    }
 
     for (const b of allConfirmed) {
       if (!b.pickup_datetime) continue;
       const pickupTime = new Date(b.pickup_datetime);
       if (now >= pickupTime) {
-        await pb.collection('bookings').update(b.id, { status: 'on_trip' });
-        await logActivity('on_trip', b.caller_phone, `Trip started for ${b.reference}`);
-        console.info(`[scheduler] ${b.reference} → on_trip`);
+        try {
+          await pb.collection('bookings').update(b.id, { status: 'on_trip' });
+          await logActivity('on_trip', b.caller_phone, `Trip started for ${b.reference}`);
+          console.info(`[scheduler] ${b.reference} → on_trip`);
+        } catch (err) {
+          console.error(`[scheduler] on_trip update error for ${b.id}:`, err.message);
+        }
       }
     }
 
     // ── on_trip → completed ───────────────────────────────────────────────
-    // Complete only when now >= pickup_datetime + duration_hours
-    const allOnTrip = await pb.collection('bookings').getFullList({
-      filter: 'status = "on_trip"', requestKey: null,
-    });
+    let allOnTrip = [];
+    try {
+      allOnTrip = await pb.collection('bookings').getFullList({
+        filter: 'status = "on_trip"', requestKey: null,
+      });
+    } catch (err) {
+      console.error('[scheduler] on_trip query error:', err.message);
+    }
 
     for (const b of allOnTrip) {
       if (!b.pickup_datetime || !b.duration_hours) continue;
@@ -60,9 +72,13 @@ async function tick() {
       const completedAt = new Date(pickupTime.getTime() + b.duration_hours * 3600 * 1000);
 
       if (now >= completedAt) {
-        await pb.collection('bookings').update(b.id, { status: 'completed' });
-        await logActivity('completed', b.caller_phone, `Trip completed for ${b.reference}`);
-        console.info(`[scheduler] ${b.reference} → completed`);
+        try {
+          await pb.collection('bookings').update(b.id, { status: 'completed' });
+          await logActivity('completed', b.caller_phone, `Trip completed for ${b.reference}`);
+          console.info(`[scheduler] ${b.reference} → completed`);
+        } catch (err) {
+          console.error(`[scheduler] completed update error for ${b.id}:`, err.message);
+        }
       }
     }
 
@@ -80,7 +96,7 @@ async function tick() {
     }
 
   } catch (err) {
-    console.error('[scheduler] tick error:', err.message);
+    console.error('[scheduler] tick error:', err.message, err.status ?? '');
   }
 }
 
