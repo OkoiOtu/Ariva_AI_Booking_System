@@ -1,0 +1,242 @@
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeLeft {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeRight {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(1deg); }
+  66%       { transform: translateY(-4px) rotate(-1deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+@keyframes ripple {
+  from { transform: scale(0); opacity: 0.6; }
+  to   { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes slideInNotification {
+  from { opacity: 0; transform: translateX(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes orb {
+  0%, 100% { transform: translate(0px,   0px)   scale(1); }
+  33%       { transform: translate(30px, -40px)  scale(1.05); }
+  66%       { transform: translate(-20px, 20px)  scale(0.96); }
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ─── Scroll-triggered animations ──────────────────────────────────────── */
+
+.anim-ready {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.anim-ready.anim-from-left  { transform: translateX(-28px); }
+.anim-ready.anim-from-right { transform: translateX(28px); }
+.anim-ready.anim-scale      { transform: scale(0.94); }
+
+.anim-ready.anim-visible {
+  opacity: 1;
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+/* Stagger delays */
+.anim-delay-1 { transition-delay: 0.08s; }
+.anim-delay-2 { transition-delay: 0.16s; }
+.anim-delay-3 { transition-delay: 0.24s; }
+.anim-delay-4 { transition-delay: 0.32s; }
+.anim-delay-5 { transition-delay: 0.40s; }
+.anim-delay-6 { transition-delay: 0.48s; }
+
+/* ─── Utility animation classes ─────────────────────────────────────────── */
+
+.animate-float     { animation: float    4s ease-in-out infinite; }
+.animate-float-slow{ animation: floatSlow 7s ease-in-out infinite; }
+.animate-pulse     { animation: pulse    2s ease-in-out infinite; }
+.animate-spin      { animation: spin     1s linear infinite; }
+.animate-marquee   { animation: marquee  28s linear infinite; }
+
+.animate-fade-up   { animation: fadeUp   0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fadeIn   0.5s ease both; }
+.animate-scale-up  { animation: scaleUp  0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* ─── Gradient text ──────────────────────────────────────────────────────── */
+
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-animated {
+  background: linear-gradient(135deg, #6C63FF, #A78BFA, #C4B5FD, #6C63FF);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ─── Shimmer skeleton ───────────────────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    var(--color-bg-secondary) 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Hover lift ─────────────────────────────────────────────────────────── */
+
+.hover-lift {
+  transition: var(--ease-normal);
+  will-change: transform;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-lift-sm {
+  transition: var(--ease-fast);
+  will-change: transform;
+}
+.hover-lift-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── Ripple effect ──────────────────────────────────────────────────────── */
+
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  width: 60px;
+  height: 60px;
+  margin-top: -30px;
+  margin-left: -30px;
+  pointer-events: none;
+  animation: ripple 0.6s linear;
+}
+
+/* ─── Orb glow ───────────────────────────────────────────────────────────── */
+
+.orb {
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: orb 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-ready,
+  .anim-ready.anim-visible   { transition: none; }
+  .animate-float,
+  .animate-float-slow,
+  .animate-pulse,
+  .animate-spin,
+  .animate-marquee,
+  .animate-gradient,
+  .text-gradient-animated,
+  .orb                       { animation: none; }
+  .hover-lift:hover,
+  .hover-lift-sm:hover       { transform: none; }
+}

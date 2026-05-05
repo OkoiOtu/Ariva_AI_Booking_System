@@ -1,390 +1,719 @@
+'use client';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useScrollAnimation, useScrollAnimationAll } from '@/hooks/useScrollAnimation';
+import { useCountUp } from '@/hooks/useCountUp';
+import '@/styles/tokens.css';
+import '@/styles/animations.css';
+import '@/styles/landing.css';
 
-export const metadata = { title: 'Ariva — AI-Powered Transportation Booking' };
+/* ─── Data ───────────────────────────────────────────────────────────────── */
+
+const NAV_LINKS = [
+  { label: 'Features',     href: '#features' },
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Pricing',      href: '#pricing' },
+  { label: 'FAQ',          href: '#faq' },
+];
+
+const TRANSPORT_TYPES = [
+  '🚌 Coach Hire', '🚐 Minibus', '✈️ Airport Transfer', '🚗 Executive Cars',
+  '🏎️ Chauffeur Service', '🚎 Party Bus', '🚑 Medical Transport', '🛻 SUV Fleet',
+  '🚕 Taxi Dispatch', '🚀 VIP Transport', '🚌 Coach Hire', '🚐 Minibus',
+  '✈️ Airport Transfer', '🚗 Executive Cars', '🏎️ Chauffeur Service',
+];
+
+const PAIN_POINTS = [
+  {
+    icon: '📵',
+    title: 'Calls dropped, revenue gone',
+    body: "Every missed call at 2am is a booking that went to your competitor. Your phone can't work 24/7 — your AI can.",
+    stat: '73% of callers never call back',
+  },
+  {
+    icon: '📋',
+    title: 'Manual booking = costly mistakes',
+    body: 'Double-bookings, wrong pickup times, scribbled notes. One dispatcher error can lose you the client forever.',
+    stat: '1 in 5 manual bookings has an error',
+  },
+  {
+    icon: '😤',
+    title: 'Customers expect instant confirmation',
+    body: "Saying \"we'll call you back\" is no longer acceptable. Customers book the service that responds in 10 seconds.",
+    stat: '68% expect same-minute confirmation',
+  },
+];
+
+const HOW_IT_WORKS = [
+  { step: '01', icon: '📞', title: 'Customer calls your number',     body: "Your Twilio number rings. Aria answers instantly — in your company's voice, with your pricing, every time." },
+  { step: '02', icon: '🧠', title: 'AI captures every detail',       body: 'Aria asks the right questions: pickup, destination, date, time, passenger count, vehicle preference — then confirms pricing live on the call.' },
+  { step: '03', icon: '📱', title: 'Customer gets instant SMS',       body: 'A confirmation SMS with full trip details and a cancellation link lands on the customer\'s phone within seconds of the call ending.' },
+  { step: '04', icon: '🚗', title: 'Your team gets notified',         body: 'Every admin in your company receives an SMS alert. Your dashboard updates in real time.' },
+  { step: '05', icon: '📊', title: 'You run the business, not the phones', body: 'Track revenue, manage drivers, review calls, and grow — while Aria handles every inbound booking automatically.' },
+];
+
+const FEATURES = [
+  { tab: 'AI Voice',  icon: '🎙️', title: '24/7 AI Voice Agent',      body: 'GPT-4o powered voice agent answers every call, understands natural language, handles complex multi-leg bookings, and knows your pricing inside out.' },
+  { tab: 'AI Voice',  icon: '🌍', title: 'Multi-language Ready',      body: 'Aria can converse in English and adapt to local dialects and phrasing — perfect for regional transport companies.' },
+  { tab: 'AI Voice',  icon: '⚡', title: 'Sub-2s Response Time',      body: 'No IVR menus, no hold music. The call is answered and the conversation starts in under 2 seconds.' },
+  { tab: 'Dashboard', icon: '📊', title: 'Real-time Dashboard',       body: 'Live view of all active trips, upcoming bookings, and driver status. Everything updates the moment a call ends.' },
+  { tab: 'Dashboard', icon: '📁', title: 'CSV & PDF Exports',         body: 'Export bookings, leads, and revenue data to CSV or generate customer invoices as PDFs with a single click.' },
+  { tab: 'Dashboard', icon: '👥', title: 'Multi-user Roles',          body: 'Super admin, admin, and user roles. Each person sees exactly what they need — nothing more, nothing less.' },
+  { tab: 'Drivers',   icon: '🗺️', title: 'Smart Driver Assignment',   body: "Assign drivers to trips from the dashboard. Conflict detection prevents double-booking any driver for overlapping trips." },
+  { tab: 'Drivers',   icon: '🔔', title: 'Driver Notifications',      body: "Drivers receive SMS when they're assigned a trip. Includes pickup time, address, and passenger details." },
+  { tab: 'Drivers',   icon: '🛩️', title: 'Flight Tracking',           body: 'Track inbound flights and auto-adjust pickup times when a flight is delayed. No more stranded passengers.' },
+  { tab: 'Revenue',   icon: '💰', title: 'Dynamic Pricing Rules',     body: 'Set hourly rates, flat fares, or route-specific pricing. Aria quotes the correct price on every call automatically.' },
+  { tab: 'Revenue',   icon: '📈', title: 'Revenue Analytics',         body: 'See monthly revenue, peak booking hours, top routes, and conversion rate from lead to confirmed booking.' },
+  { tab: 'Revenue',   icon: '💳', title: 'Paystack Payments',         body: 'Accept card payments for subscription plans. Automated plan upgrades keep your team operational without manual invoicing.' },
+];
+
+const PLANS = [
+  {
+    name: 'Starter',
+    price: { monthly: 0, annual: 0 },
+    desc: 'Get started with AI booking — no credit card required.',
+    cta: 'Start free',
+    href: '/signup',
+    features: ['50 bookings/month', '1 user', 'AI voice answering', 'SMS confirmations', 'Basic dashboard', 'Email support'],
+    highlight: false,
+  },
+  {
+    name: 'Professional',
+    price: { monthly: 49, annual: 39 },
+    desc: 'Everything a growing transport business needs.',
+    cta: 'Start 14-day trial',
+    href: '/signup?plan=professional',
+    features: ['Unlimited bookings', '10 users', 'Driver management', 'Flight tracking', 'Revenue analytics', 'PDF invoices', 'CSV exports', 'Priority support'],
+    highlight: true,
+    badge: 'Most popular',
+  },
+  {
+    name: 'Enterprise',
+    price: { monthly: null, annual: null },
+    desc: 'Custom pricing for large fleets and white-label.',
+    cta: 'Contact us',
+    href: 'mailto:hello@ariva.ai',
+    features: ['Unlimited everything', 'Unlimited users', 'Custom AI persona', 'White-label dashboard', 'SLA guarantee', 'Dedicated account manager'],
+    highlight: false,
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "We were losing 30-40 calls a week to voicemail. Ariva turned those missed calls into £8,000 in new bookings in the first month. It pays for itself a hundred times over.",
+    name: 'Marcus Eze', role: 'Owner, Premier Rides London', avatar: 'ME', rating: 5,
+  },
+  {
+    quote: "My dispatcher used to spend 6 hours a day just answering phones. Now he focuses on operations. Aria handles the calls, and our customer satisfaction scores went up 22%.",
+    name: 'Chidinma Okafor', role: 'Operations Manager, Abuja Executive Cars', avatar: 'CO', rating: 5,
+  },
+  {
+    quote: "The flight tracking feature alone saved us 3 complaints in the first week. When a flight delays, the pickup adjusts automatically. Our airport transfer clients are amazed.",
+    name: 'David Mensah', role: 'Fleet Manager, AccraTrans', avatar: 'DM', rating: 5,
+  },
+];
+
+const FAQS = [
+  { q: "How does Aria sound on calls? Can customers tell it's AI?", a: "Aria is built on GPT-4o with natural speech synthesis — it sounds remarkably human, responds conversationally, and handles interruptions naturally. Most customers complete the booking without realising they're speaking to an AI." },
+  { q: "What happens when a caller asks something Aria doesn't know?", a: "Aria is trained on your pricing rules, vehicle types, and service area. For anything outside that scope, Aria politely notes the question and flags it as a lead in your dashboard for a human to follow up." },
+  { q: "Can I keep my existing phone number?", a: "You can port your existing number to Twilio, or we can provision a new local number for your city. The setup takes about 15 minutes." },
+  { q: "What if I already have a dispatcher?", a: "Aria handles overflow — all the calls your dispatcher can't get to, plus overnight and weekend traffic. Your dispatcher spends time on complex jobs, not routine bookings." },
+  { q: "How is multi-tenant isolation handled?", a: "Each company gets a completely isolated data environment. One company cannot see another's bookings, customers, drivers, or revenue data — by design, at the database query level." },
+  { q: "Is my data secure?", a: "All data is stored in PocketBase on Railway with encrypted connections. SMS is handled by Twilio (SOC 2). Payments go through Paystack's PCI-compliant infrastructure. We never store card numbers." },
+  { q: "Can I add multiple admins to my company?", a: "Yes. The Professional plan allows up to 10 users per company. Each admin can receive SMS booking alerts on their own phone number." },
+  { q: "How do I cancel a booking on behalf of a customer?", a: "You can cancel from the dashboard in one click. The customer also receives a unique cancellation link in their confirmation SMS, so they can self-cancel without calling." },
+  { q: "What's the difference between Starter and Professional?", a: "Starter is free with a 50-booking/month cap and 1 user. Professional removes all limits, unlocks driver management, flight tracking, analytics, and supports up to 10 users." },
+  { q: "Do you offer a free trial for Professional?", a: "Yes — 14 days free on Professional, no credit card required. If you need more time to evaluate, just contact us." },
+];
+
+/* ─── Sub-components ─────────────────────────────────────────────────────── */
+
+function StarRating({ rating }) {
+  return (
+    <div className="star-rating" aria-label={`${rating} out of 5 stars`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <svg key={i} width="16" height="16" viewBox="0 0 16 16" fill={i < rating ? '#F59E0B' : 'none'} stroke={i < rating ? '#F59E0B' : '#D1D9E6'}>
+          <path d="M8 1.5l1.93 3.91 4.32.63-3.12 3.04.73 4.3L8 11.27l-3.86 2.11.73-4.3L1.75 5.04l4.32-.63L8 1.5z" strokeWidth="1.2"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`faq-item ${open ? 'faq-open' : ''}`}>
+      <button className="faq-question" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+        <span>{q}</span>
+        <span className="faq-chevron" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 7.5l5 5 5-5"/>
+          </svg>
+        </span>
+      </button>
+      {open && <div className="faq-answer"><p>{a}</p></div>}
+    </div>
+  );
+}
+
+/* ─── ROI Calculator ──────────────────────────────────────────────────────── */
+
+function ROICalculator() {
+  const [calls,      setCalls]      = useState(40);
+  const [bookingVal, setBookingVal] = useState(85);
+  const [missedPct,  setMissedPct]  = useState(30);
+  const ref = useScrollAnimation();
+
+  const missedCalls   = Math.round(calls * (missedPct / 100));
+  const monthlyLoss   = missedCalls * bookingVal * 4.3;
+  const arivaRecovery = Math.round(monthlyLoss * 0.85);
+  const planCost      = 49;
+  const monthlyROI    = arivaRecovery - planCost;
+  const yearlyLoss    = monthlyLoss * 12;
+
+  const fmt = n => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
+
+  return (
+    <section className="section roi-section" id="roi-calculator">
+      <div className="container">
+        <div ref={ref} className="section-header anim-ready">
+          <div className="section-eyebrow">Revenue at risk</div>
+          <h2 className="section-title">How much are you losing right now?</h2>
+          <p className="section-subtitle">
+            Transport businesses lose thousands every month to missed calls. Drag the sliders to see your exact exposure — then see what Ariva recovers.
+          </p>
+        </div>
+
+        <div className="roi-layout">
+          <div className="roi-controls">
+            {[
+              { label: 'Inbound calls per week', value: calls, set: setCalls, min: 5, max: 200, step: 5, format: v => v, rangeL: '5', rangeR: '200+' },
+              { label: 'Average booking value',  value: bookingVal, set: setBookingVal, min: 20, max: 500, step: 5, format: v => `£${v}`, rangeL: '£20', rangeR: '£500' },
+              { label: 'Calls you currently miss', value: missedPct, set: setMissedPct, min: 5, max: 80, step: 5, format: v => `${v}%`, rangeL: '5%', rangeR: '80%' },
+            ].map(({ label, value, set, min, max, step, format, rangeL, rangeR }) => (
+              <div key={label} className="roi-slider-group">
+                <div className="roi-slider-header">
+                  <label>{label}</label>
+                  <span className="roi-value">{format(value)}</span>
+                </div>
+                <input type="range" min={min} max={max} step={step} value={value}
+                  onChange={e => set(+e.target.value)} className="roi-slider" />
+                <div className="roi-slider-range"><span>{rangeL}</span><span>{rangeR}</span></div>
+              </div>
+            ))}
+
+            <div className="roi-insight">
+              <span className="roi-insight-icon">📊</span>
+              <p>You miss roughly <strong>{missedCalls} calls/week</strong> — that's <strong>{Math.round(missedCalls * 4.3)} per month</strong> ringing out unanswered.</p>
+            </div>
+          </div>
+
+          <div className="roi-results">
+            <div className="roi-card roi-card-loss">
+              <div className="roi-card-label">Monthly revenue at risk</div>
+              <div className="roi-card-amount">{fmt(monthlyLoss)}</div>
+              <div className="roi-card-sub">Without Ariva — {fmt(yearlyLoss)}/yr going to competitors</div>
+            </div>
+
+            <div className="roi-card roi-card-recovery">
+              <div className="roi-card-label">Monthly recovery with Ariva</div>
+              <div className="roi-card-amount">{fmt(arivaRecovery)}</div>
+              <div className="roi-card-sub">Aria captures ~85% of missed calls as confirmed bookings</div>
+            </div>
+
+            <div className="roi-card roi-card-profit">
+              <div className="roi-card-label">Net monthly profit (after £{planCost}/mo plan)</div>
+              <div className="roi-card-amount roi-profit-amount">{fmt(monthlyROI)}</div>
+              <div className="roi-card-sub">ROI: {Math.round(monthlyROI / planCost)}× your Ariva subscription</div>
+            </div>
+
+            <Link href="/signup?plan=professional" className="roi-cta-btn">
+              Recover {fmt(arivaRecovery)} this month
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9h12M9 3l6 6-6 6"/></svg>
+            </Link>
+
+            <p className="roi-disclaimer">Estimates based on 85% call-capture rate and 100% booking conversion on captured calls. Actual results vary by business.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Animated stat ───────────────────────────────────────────────────────── */
+
+function AnimatedStat({ value, suffix = '', prefix = '', label, enabled }) {
+  const count = useCountUp(value, { enabled, duration: 1600 });
+  return (
+    <div className="hero-stat">
+      <span className="hero-stat-number">{prefix}{Math.round(count)}{suffix}</span>
+      <span className="hero-stat-label">{label}</span>
+    </div>
+  );
+}
+
+/* ─── Floating notification ───────────────────────────────────────────────── */
+
+function FloatingNotif({ icon, text, sub, delay = 0, side = 'right' }) {
+  return (
+    <div className={`floating-notif floating-notif-${side}`} style={{ animationDelay: `${delay}s` }}>
+      <span className="floating-notif-icon">{icon}</span>
+      <div>
+        <div className="floating-notif-text">{text}</div>
+        {sub && <div className="floating-notif-sub">{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Page ────────────────────────────────────────────────────────────────── */
 
 export default function LandingPage() {
+  const [scrolled,         setScrolled]         = useState(false);
+  const [menuOpen,         setMenuOpen]         = useState(false);
+  const [billingAnnual,    setBillingAnnual]    = useState(false);
+  const [activeFeatureTab, setActiveFeatureTab] = useState('AI Voice');
+  const [statsVisible,     setStatsVisible]     = useState(false);
+
+  const statsRef = useRef(null);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 24);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  useEffect(() => {
+    const el = statsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setStatsVisible(true); },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const painRef         = useScrollAnimationAll('.anim-item');
+  const howRef          = useScrollAnimationAll('.anim-item');
+  const featRef         = useScrollAnimationAll('.anim-item');
+  const pricingRef      = useScrollAnimationAll('.anim-item');
+  const testimonialsRef = useScrollAnimationAll('.anim-item');
+  const faqRef          = useScrollAnimationAll('.anim-item');
+  const ctaRef          = useScrollAnimation();
+
+  const featureTabs    = [...new Set(FEATURES.map(f => f.tab))];
+  const visibleFeatures = FEATURES.filter(f => f.tab === activeFeatureTab);
+
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
-        .lp-root {
-          font-family: 'DM Sans', sans-serif;
-          background: #0a0a0f;
-          color: #fff;
-          min-height: 100vh;
-          overflow-x: hidden;
-        }
-        .lp-root *, .lp-root *::before, .lp-root *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* Grid bg */
-        .lp-grid-bg {
-          position: fixed; inset: 0; z-index: 0; pointer-events: none;
-          background-image:
-            linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
-          background-size: 60px 60px;
-        }
-
-        /* Nav */
-        .lp-nav {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 18px 48px; border-bottom: 1px solid rgba(255,255,255,0.07);
-          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-          background: rgba(10,10,15,0.92); backdrop-filter: blur(20px);
-        }
-        .lp-nav-offset { height: 65px; }
-        .lp-logo {
-          display: flex; align-items: center; gap: 10px;
-          font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px;
-          text-decoration: none; color: #fff;
-        }
-        .lp-logo-mark {
-          width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-          background: linear-gradient(135deg, #6c63ff, #a78bfa);
-          display: flex; align-items: center; justify-content: center; font-size: 17px;
-        }
-        .lp-navlinks { display: flex; align-items: center; gap: 32px; }
-        .lp-navlinks a { color: rgba(255,255,255,0.55); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-        .lp-navlinks a:hover { color: #fff; }
-        .lp-nav-cta { display: flex; gap: 10px; }
-        .lp-btn { padding: 9px 20px; border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-        .lp-btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
-        .lp-btn-ghost:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
-        .lp-btn-primary { background: #6c63ff; border: none; color: #fff; }
-        .lp-btn-primary:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
-
-        /* Hero */
-        .lp-hero { padding: 90px 48px 80px; text-align: center; max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
-        .lp-orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
-        .lp-orb-1 { width: 500px; height: 500px; top: -80px; left: 50%; transform: translateX(-50%); background: rgba(108,99,255,0.2); }
-        .lp-orb-2 { width: 280px; height: 280px; bottom: 0; right: 8%; background: rgba(52,211,153,0.1); }
-
-        .lp-badge {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.28);
-          border-radius: 100px; padding: 6px 16px; font-size: 13px; color: #a78bfa;
-          margin-bottom: 32px;
-        }
-        .lp-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; animation: lp-pulse 2s infinite; }
-        @keyframes lp-pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-
-        .lp-h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(40px, 6vw, 72px); line-height: 1.06; letter-spacing: -0.03em; margin-bottom: 22px; }
-        .lp-h1 em { font-style: normal; background: linear-gradient(135deg, #6c63ff, #a78bfa 50%, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .lp-hero-sub { font-size: 18px; color: rgba(255,255,255,0.5); max-width: 540px; margin: 0 auto 44px; font-weight: 300; line-height: 1.75; }
-        .lp-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .lp-btn-lg { padding: 14px 32px; font-size: 15px; border-radius: 10px; }
-
-        /* Mockup */
-        .lp-mockup-wrap { max-width: 860px; margin: 64px auto 0; padding: 0 48px; position: relative; z-index: 1; }
-        .lp-mockup-glow { position: absolute; inset: -40px; border-radius: 24px; background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,0.22), transparent 70%); filter: blur(20px); }
-        .lp-mockup { background: #1c1c26; border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
-        .lp-mbar { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
-        .lp-mdot { width: 10px; height: 10px; border-radius: 50%; }
-        .lp-murl { flex: 1; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 4px 12px; font-size: 12px; color: rgba(255,255,255,0.3); margin: 0 12px; }
-        .lp-mbody { display: grid; grid-template-columns: 52px 1fr; height: 300px; }
-        .lp-msidebar { background: rgba(255,255,255,0.02); border-right: 1px solid rgba(255,255,255,0.07); padding: 12px 7px; display: flex; flex-direction: column; gap: 6px; }
-        .lp-mnavitem { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.04); margin: 0 auto; }
-        .lp-mnavitem.on { background: rgba(108,99,255,0.3); }
-        .lp-mmain { padding: 18px; }
-        .lp-mrow { display: flex; gap: 10px; margin-bottom: 10px; }
-        .lp-mstat { flex: 1; height: 60px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; }
-        .lp-mval { height: 12px; width: 48%; border-radius: 4px; }
-        .lp-mlbl { height: 7px; width: 68%; border-radius: 4px; background: rgba(255,255,255,0.07); }
-        .lp-mtable { background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
-        .lp-mth { background: rgba(255,255,255,0.04); padding: 7px 12px; display: flex; gap: 8px; }
-        .lp-mthcell { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.12); }
-        .lp-mtr { padding: 7px 12px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 8px; align-items: center; }
-        .lp-mtd { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.06); }
-        .lp-mbadge { height: 14px; width: 50px; border-radius: 20px; }
-
-        /* Stats */
-        .lp-stats { border-top: 1px solid rgba(255,255,255,0.07); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 28px 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; max-width: 840px; margin: 80px auto 0; position: relative; z-index: 1; }
-        .lp-stat { text-align: center; }
-        .lp-statnum { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 700; background: linear-gradient(135deg, #fff, rgba(255,255,255,0.55)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .lp-statlbl { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
-
-        /* Sections */
-        .lp-section { padding: 96px 48px; max-width: 1060px; margin: 0 auto; position: relative; z-index: 1; text-align: left; }
-        .lp-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #a78bfa; margin-bottom: 14px; }
-        .lp-h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: clamp(26px, 4vw, 42px); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 14px; }
-        .lp-sub { font-size: 15px; color: rgba(255,255,255,0.45); max-width: 460px; margin-bottom: 56px; font-weight: 300; line-height: 1.7; }
-
-        /* Steps */
-        .lp-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; }
-        .lp-step { background: #1c1c26; padding: 32px 24px; transition: background 0.2s; }
-        .lp-step:hover { background: rgba(108,99,255,0.08); }
-        .lp-stepnum { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #6c63ff; margin-bottom: 18px; }
-        .lp-stepicon { font-size: 26px; margin-bottom: 12px; }
-        .lp-step h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-        .lp-step p { font-size: 13px; color: rgba(255,255,255,0.42); line-height: 1.65; }
-
-        /* Features */
-        .lp-feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .lp-feat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 26px 22px; transition: border-color 0.2s, transform 0.2s; }
-        .lp-feat:hover { border-color: rgba(108,99,255,0.32); transform: translateY(-2px); }
-        .lp-featicon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; margin-bottom: 14px; }
-        .lp-feat h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 7px; }
-        .lp-feat p { font-size: 13px; color: rgba(255,255,255,0.42); line-height: 1.65; }
-
-        /* Pricing */
-        .lp-pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
-        .lp-plan { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 30px 26px; position: relative; }
-        .lp-plan.hot { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.45); }
-        .lp-planbadge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #6c63ff; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 14px; border-radius: 100px; white-space: nowrap; }
-        .lp-planname { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
-        .lp-planprice { font-family: 'Syne', sans-serif; font-size: 38px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-        .lp-planprice span { font-size: 15px; font-weight: 400; color: rgba(255,255,255,0.4); }
-        .lp-plandesc { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 22px; }
-        .lp-planfeats { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 26px; }
-        .lp-planfeats li { font-size: 13px; display: flex; gap: 8px; align-items: flex-start; color: rgba(255,255,255,0.75); }
-        .lp-planfeats li::before { content: '✓'; color: #34d399; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-        .lp-plancta { width: 100%; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; text-align: center; text-decoration: none; display: block; transition: all 0.2s; }
-        .lp-plancta-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.75); }
-        .lp-plancta-ghost:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
-        .lp-plancta-solid { background: #6c63ff; border: none; color: #fff; }
-        .lp-plancta-solid:hover { background: #7c74ff; }
-
-        /* CTA band */
-        .lp-ctaband { margin: 0 48px 96px; background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(167,139,250,0.08)); border: 1px solid rgba(108,99,255,0.28); border-radius: 20px; padding: 72px 48px; text-align: center; position: relative; overflow: hidden; z-index: 1; }
-        .lp-ctaband::before { content:''; position:absolute; top:-60px; left:50%; transform:translateX(-50%); width:400px; height:200px; background:radial-gradient(ellipse, rgba(108,99,255,0.28), transparent 70%); }
-        .lp-ctaband h2 { font-family: 'Syne', sans-serif; font-size: clamp(26px, 4vw, 44px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
-        .lp-ctaband p { font-size: 16px; color: rgba(255,255,255,0.45); margin-bottom: 36px; }
-        .lp-ctabandctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
-        /* Footer */
-        .lp-footer { border-top: 1px solid rgba(255,255,255,0.07); padding: 36px 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; position: relative; z-index: 1; }
-        .lp-footerlinks { display: flex; gap: 24px; }
-        .lp-footerlinks a { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s; }
-        .lp-footerlinks a:hover { color: rgba(255,255,255,0.8); }
-        .lp-footer p { font-size: 13px; color: rgba(255,255,255,0.3); }
-
-        @media (max-width: 768px) {
-          .lp-nav { padding: 14px 20px; }
-          .lp-navlinks { display: none; }
-          .lp-hero { padding: 80px 20px 56px; }
-          .lp-steps { grid-template-columns: 1fr; }
-          .lp-feats { grid-template-columns: 1fr; }
-          .lp-pricing { grid-template-columns: 1fr; }
-          .lp-section { padding: 60px 20px; }
-          .lp-stats { padding: 22px 20px; margin-top: 56px; }
-          .lp-mockup-wrap { padding: 0 20px; }
-          .lp-ctaband { margin: 0 20px 56px; padding: 44px 22px; }
-          .lp-footer { padding: 28px 20px; flex-direction: column; align-items: flex-start; }
-          .lp-mbody { grid-template-columns: 1fr; }
-          .lp-msidebar { display: none; }
-        }
-      `}</style>
-
-      <div className="lp-root">
-        <div className="lp-grid-bg" />
-        <div className="lp-nav-offset" />
-
-        {/* Nav */}
-        <nav className="lp-nav">
-          <Link href="/" className="lp-logo">
-            <div className="lp-logo-mark">🚗</div>
-            Ariva
+      {/* ── Navigation ──────────────────────────────────────────────────── */}
+      <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
+        <div className="nav-inner">
+          <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
+            <span className="nav-logo-icon">✈</span>
+            <span className="nav-logo-text">Ariva</span>
           </Link>
-          <div className="lp-navlinks">
-            <a href="#how">How it works</a>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-          </div>
-          <div className="lp-nav-cta">
-            <Link href="/login" className="lp-btn lp-btn-ghost" target="_blank" rel="noopener noreferrer">Sign in</Link>
-            <Link href="/signup" className="lp-btn lp-btn-primary" target="_blank" rel="noopener noreferrer">Get started →</Link>
-          </div>
-        </nav>
 
-        {/* Hero */}
-        <section style={{ position:'relative', overflow:'hidden' }}>
-          <div className="lp-orb lp-orb-1" />
-          <div className="lp-orb lp-orb-2" />
-          <div className="lp-hero">
-            <div className="lp-badge">
-              <span className="lp-badge-dot" />
-              AI-powered booking — live on every call
-            </div>
-            <h1 className="lp-h1">
-              Your AI receptionist<br/>
-              <em>never misses a booking</em>
-            </h1>
-            <p className="lp-hero-sub">
-              Ariva answers every inbound call, collects booking details, confirms pricing, and updates your dashboard — fully automated, 24/7.
-            </p>
-            <div className="lp-ctas">
-              <Link href="/signup" className="lp-btn lp-btn-primary lp-btn-lg" target="_blank" rel="noopener noreferrer">Start free trial →</Link>
-              <a href="#how" className="lp-btn lp-btn-ghost lp-btn-lg">See how it works</a>
-            </div>
+          <ul className="nav-links">
+            {NAV_LINKS.map(l => (
+              <li key={l.label}><a href={l.href} className="nav-link">{l.label}</a></li>
+            ))}
+          </ul>
+
+          <div className="nav-actions">
+            <Link href="/login"  className="nav-btn-ghost">Log in</Link>
+            <Link href="/signup" className="nav-btn-primary">Start free</Link>
           </div>
 
-          {/* Mockup */}
-          <div className="lp-mockup-wrap">
-            <div className="lp-mockup-glow" />
-            <div className="lp-mockup">
-              <div className="lp-mbar">
-                <div className="lp-mdot" style={{background:'#ff5f57'}} />
-                <div className="lp-mdot" style={{background:'#febc2e'}} />
-                <div className="lp-mdot" style={{background:'#28c840'}} />
-                <div className="lp-murl">app.ariva.ai/dashboard</div>
+          <button
+            className={`nav-hamburger ${menuOpen ? 'nav-hamburger-open' : ''}`}
+            onClick={() => setMenuOpen(o => !o)}
+            aria-expanded={menuOpen}
+            aria-label="Toggle menu"
+          >
+            <span/><span/><span/>
+          </button>
+        </div>
+
+        {menuOpen && (
+          <div className="nav-mobile">
+            {NAV_LINKS.map(l => (
+              <a key={l.label} href={l.href} className="nav-mobile-link" onClick={() => setMenuOpen(false)}>{l.label}</a>
+            ))}
+            <div className="nav-mobile-actions">
+              <Link href="/login"  className="nav-btn-ghost"    onClick={() => setMenuOpen(false)}>Log in</Link>
+              <Link href="/signup" className="nav-btn-primary"  onClick={() => setMenuOpen(false)}>Start free</Link>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <main>
+        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        <section className="hero">
+          <div className="hero-orbs" aria-hidden="true">
+            <div className="orb hero-orb-1"/>
+            <div className="orb hero-orb-2"/>
+            <div className="orb hero-orb-3"/>
+          </div>
+
+          <div className="container hero-container">
+            <div className="hero-content animate-fade-up">
+              <div className="hero-eyebrow">
+                <span className="hero-eyebrow-dot animate-pulse"/>
+                AI-powered booking for transport companies
               </div>
-              <div className="lp-mbody">
-                <div className="lp-msidebar">
-                  {[true,false,false,false,false,false].map((on,i) => (
-                    <div key={i} className={'lp-mnavitem'+(on?' on':'')} />
-                  ))}
+
+              <h1 className="hero-title">
+                Your AI receptionist that{' '}
+                <span className="text-gradient-animated">never misses a call</span>
+              </h1>
+
+              <p className="hero-subtitle">
+                Aria answers every inbound call, captures booking details, quotes the price, and confirms the trip — all while you sleep. Set up in 15 minutes.
+              </p>
+
+              <div className="hero-actions">
+                <Link href="/signup" className="btn-hero-primary">
+                  Start free — no card needed
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 9h12M9 3l6 6-6 6"/></svg>
+                </Link>
+                <a href="#how-it-works" className="btn-hero-ghost">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="9" r="7"/><path d="M7 6.5l4 2.5-4 2.5V6.5z" fill="currentColor" stroke="none"/></svg>
+                  See how it works
+                </a>
+              </div>
+
+              <div className="hero-trust">
+                <span className="hero-trust-item">✓ 50 bookings free</span>
+                <span className="hero-trust-item">✓ No setup fees</span>
+                <span className="hero-trust-item">✓ Cancel anytime</span>
+              </div>
+            </div>
+
+            <div className="hero-visual animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <div className="hero-mockup">
+                <div className="hero-mockup-bar">
+                  <span/><span/><span/>
+                  <div className="hero-mockup-title">Ariva Dashboard</div>
                 </div>
-                <div className="lp-mmain">
-                  <div className="lp-mrow">
-                    {[['rgba(108,99,255,0.5)'],['rgba(52,211,153,0.4)'],['rgba(251,191,36,0.4)'],['rgba(248,113,113,0.4)']].map(([c],i) => (
-                      <div key={i} className="lp-mstat">
-                        <div className="lp-mval" style={{background:c}} />
-                        <div className="lp-mlbl" />
-                      </div>
-                    ))}
+                <div className="hero-mockup-content">
+                  <div className="hero-mockup-stat-row">
+                    <div className="hero-mockup-stat"><div className="hm-label">Today</div><div className="hm-val hm-green">12</div></div>
+                    <div className="hero-mockup-stat"><div className="hm-label">Active</div><div className="hm-val hm-blue">3</div></div>
+                    <div className="hero-mockup-stat"><div className="hm-label">Revenue</div><div className="hm-val hm-purple">£1,840</div></div>
                   </div>
-                  <div className="lp-mtable">
-                    <div className="lp-mth">
-                      {[80,60,100,55].map((w,i) => <div key={i} className="lp-mthcell" style={{width:w}} />)}
+                  <div className="hero-mockup-booking">
+                    <div className="hm-booking-row">
+                      <div className="hm-badge hm-badge-confirmed">Confirmed</div>
+                      <div className="hm-ref">BK-00042</div>
                     </div>
-                    {[['rgba(52,211,153,0.2)'],['rgba(108,99,255,0.2)'],['rgba(251,191,36,0.2)'],['rgba(52,211,153,0.2)']].map(([bg],i) => (
-                      <div key={i} className="lp-mtr">
-                        <div className="lp-mtd" style={{width:85+i*5}} />
-                        <div className="lp-mtd" style={{width:65}} />
-                        <div className="lp-mtd" style={{width:100}} />
-                        <div className="lp-mbadge" style={{background:bg}} />
-                      </div>
-                    ))}
+                    <div className="hm-booking-detail">📍 Heathrow T2 → Canary Wharf</div>
+                    <div className="hm-booking-detail">🕐 15 Jan · 06:30 · Executive Saloon</div>
+                  </div>
+                  <div className="hero-mockup-booking">
+                    <div className="hm-booking-row">
+                      <div className="hm-badge hm-badge-trip">On trip</div>
+                      <div className="hm-ref">BK-00041</div>
+                    </div>
+                    <div className="hm-booking-detail">📍 City Airport → Mayfair</div>
+                    <div className="hm-booking-detail">🕐 15 Jan · 05:00 · VIP Mercedes</div>
+                  </div>
+                  <div className="hero-mockup-aria">
+                    <div className="aria-pulse"><span/><span/><span/></div>
+                    <div className="aria-text">Aria is live · answering calls</div>
                   </div>
                 </div>
               </div>
+
+              <FloatingNotif icon="📞" text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={0.8} side="left" />
+              <FloatingNotif icon="✅" text="SMS sent to customer"    sub="Confirmation + cancel link"  delay={2.2} side="right" />
+              <FloatingNotif icon="🔔" text="Admin alerted"           sub="+44 7700 900123"             delay={3.8} side="left" />
             </div>
           </div>
-        </section>
 
-        {/* Stats */}
-        <div className="lp-stats">
-          {[['24/7','Call coverage, zero downtime'],['<3s','Booking confirmation time'],['100%','Calls answered automatically'],['SMS','Instant customer confirmation']].map(([n,l]) => (
-            <div key={n} className="lp-stat">
-              <div className="lp-statnum">{n}</div>
-              <div className="lp-statlbl">{l}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* How it works */}
-        <section className="lp-section" id="how">
-          <div className="lp-tag">How it works</div>
-          <h2 className="lp-h2">From call to confirmed booking<br/>in under 60 seconds</h2>
-          <p className="lp-sub">No staff required. No missed calls. No manual data entry.</p>
-          <div className="lp-steps">
-            {[
-              ['01','📞','Customer calls in','Your AI agent Aria answers immediately, greets the caller warmly, and begins collecting booking details.'],
-              ['02','🧠','AI captures everything','Name, pickup time, address, vehicle type, duration — all extracted automatically from the conversation.'],
-              ['03','💰','Price calculated','Your pricing rules are applied instantly. Fixed routes or hourly rates — confirmed on the call.'],
-              ['04','📊','Dashboard updates live','Booking appears on your dashboard the moment the call ends. Assign a driver, track status, manage everything.'],
-              ['05','💬','Customer gets SMS','Confirmation sent automatically with booking reference, pickup details, price, and a cancellation link.'],
-            ].map(([n,icon,title,desc]) => (
-              <div key={n} className="lp-step">
-                <div className="lp-stepnum">STEP {n}</div>
-                <div className="lp-stepicon">{icon}</div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
+          <div className="hero-stats-bar" ref={statsRef}>
+            <div className="container">
+              <div className="hero-stats">
+                <AnimatedStat value={5000} suffix="+"  label="Bookings automated" enabled={statsVisible} />
+                <div className="hero-stat-divider"/>
+                <AnimatedStat value={98}   suffix="%"  label="Call capture rate"  enabled={statsVisible} />
+                <div className="hero-stat-divider"/>
+                <AnimatedStat value={2}    suffix="s"  label="Avg response time"  enabled={statsVisible} />
+                <div className="hero-stat-divider"/>
+                <AnimatedStat value={24}   suffix="/7" label="Always answering"   enabled={statsVisible} />
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="lp-section" id="features">
-          <div className="lp-tag">Features</div>
-          <h2 className="lp-h2">Everything a transport<br/>business needs</h2>
-          <p className="lp-sub">Built for real operations. Not just a demo.</p>
-          <div className="lp-feats">
-            {[
-              ['rgba(108,99,255,0.15)','🤖','AI voice agent','Natural conversation in English. Handles accents, incomplete sentences, and clarifications gracefully.'],
-              ['rgba(52,211,153,0.15)','📅','Booking calendar','Monthly view with all bookings colour-coded by status. See your entire schedule at a glance.'],
-              ['rgba(251,191,36,0.15)','💲','Flexible pricing engine','Hourly rates per vehicle type plus fixed routes. Price is quoted on the call and included in the SMS.'],
-              ['rgba(248,113,113,0.15)','🚗','Driver management','Assign drivers with conflict detection. Track who is available, on trip, or off duty in real time.'],
-              ['rgba(167,139,250,0.15)','📈','Revenue tracking','Daily, weekly, and monthly revenue charts. Filter by date range and export to CSV in one click.'],
-              ['rgba(96,165,250,0.15)','👥','Customer history','Look up any customer by phone number. Full booking history, total spend, trip count.'],
-              ['rgba(52,211,153,0.15)','🔔','SMS reminders','Automated 1-hour pickup reminders. Admin alert SMS for every new booking and lead.'],
-              ['rgba(108,99,255,0.15)','🏢','Multi-company ready','Each company gets its own data, phone number, and AI assistant. Ready for SaaS scale.'],
-            ].map(([bg,icon,title,desc]) => (
-              <div key={title} className="lp-feat">
-                <div className="lp-featicon" style={{background:bg}}>{icon}</div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
+        {/* ── Marquee ───────────────────────────────────────────────────── */}
+        <section className="marquee-section" aria-label="Supported transport types">
+          <div className="marquee-track">
+            <div className="marquee-inner animate-marquee">
+              {[...TRANSPORT_TYPES, ...TRANSPORT_TYPES].map((t, i) => (
+                <span key={i} className="marquee-item">{t}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Pain Points ───────────────────────────────────────────────── */}
+        <section className="section" id="pain-points" ref={painRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">The problem</div>
+              <h2 className="section-title">Your phone is costing you money</h2>
+              <p className="section-subtitle">Transport businesses run on inbound calls. Every unanswered call is a booking, a repeat customer, and a referral — gone.</p>
+            </div>
+            <div className="pain-grid">
+              {PAIN_POINTS.map((p, i) => (
+                <div key={i} className={`pain-card anim-item anim-delay-${i + 1}`}>
+                  <div className="pain-icon">{p.icon}</div>
+                  <h3 className="pain-title">{p.title}</h3>
+                  <p className="pain-body">{p.body}</p>
+                  <div className="pain-stat">{p.stat}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── How It Works ──────────────────────────────────────────────── */}
+        <section className="section section-alt" id="how-it-works" ref={howRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">How it works</div>
+              <h2 className="section-title">A booking, start to finish, in 60 seconds</h2>
+              <p className="section-subtitle">From first ring to driver assigned — fully automated.</p>
+            </div>
+            <div className="steps-track">
+              {HOW_IT_WORKS.map((s, i) => (
+                <div key={i} className={`step anim-item anim-delay-${i + 1}`}>
+                  <div className="step-number">{s.step}</div>
+                  <div className="step-icon">{s.icon}</div>
+                  <h3 className="step-title">{s.title}</h3>
+                  <p className="step-body">{s.body}</p>
+                  {i < HOW_IT_WORKS.length - 1 && <div className="step-connector" aria-hidden="true"/>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Features ──────────────────────────────────────────────────── */}
+        <section className="section" id="features" ref={featRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">Features</div>
+              <h2 className="section-title">Everything a modern fleet needs</h2>
+              <p className="section-subtitle">Built for transport operators who want the phone answered, the booking captured, and the driver dispatched — without lifting a finger.</p>
+            </div>
+
+            <div className="feature-tabs anim-item">
+              {featureTabs.map(tab => (
+                <button
+                  key={tab}
+                  className={`feature-tab ${activeFeatureTab === tab ? 'feature-tab-active' : ''}`}
+                  onClick={() => setActiveFeatureTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="feature-grid">
+              {visibleFeatures.map((f, i) => (
+                <div key={`${activeFeatureTab}-${i}`} className={`feature-card anim-item anim-delay-${i + 1}`}>
+                  <div className="feature-icon">{f.icon}</div>
+                  <h3 className="feature-title">{f.title}</h3>
+                  <p className="feature-body">{f.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── ROI Calculator ────────────────────────────────────────────── */}
+        <ROICalculator />
+
+        {/* ── Pricing ───────────────────────────────────────────────────── */}
+        <section className="section" id="pricing" ref={pricingRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">Pricing</div>
+              <h2 className="section-title">Simple, honest pricing</h2>
+              <p className="section-subtitle">Start free. Upgrade when you're ready. No per-booking fees, ever.</p>
+            </div>
+
+            <div className="billing-toggle anim-item">
+              <span className={!billingAnnual ? 'billing-active' : ''}>Monthly</span>
+              <button
+                className={`billing-switch ${billingAnnual ? 'billing-switch-on' : ''}`}
+                onClick={() => setBillingAnnual(a => !a)}
+                aria-label="Toggle annual billing"
+                role="switch"
+                aria-checked={billingAnnual}
+              >
+                <span className="billing-switch-thumb"/>
+              </button>
+              <span className={billingAnnual ? 'billing-active' : ''}>
+                Annual <span className="billing-save">Save 20%</span>
+              </span>
+            </div>
+
+            <div className="pricing-grid">
+              {PLANS.map((plan, i) => (
+                <div key={plan.name} className={`pricing-card anim-item anim-delay-${i + 1} ${plan.highlight ? 'pricing-card-highlight' : ''}`}>
+                  {plan.badge && <div className="pricing-badge">{plan.badge}</div>}
+                  <div className="pricing-name">{plan.name}</div>
+                  <div className="pricing-price">
+                    {plan.price.monthly === null ? (
+                      <span className="pricing-amount">Custom</span>
+                    ) : plan.price.monthly === 0 ? (
+                      <span className="pricing-amount">Free</span>
+                    ) : (
+                      <>
+                        <span className="pricing-currency">$</span>
+                        <span className="pricing-amount">{billingAnnual ? plan.price.annual : plan.price.monthly}</span>
+                        <span className="pricing-period">/mo</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="pricing-desc">{plan.desc}</p>
+                  <Link href={plan.href} className={plan.highlight ? 'pricing-cta-primary' : 'pricing-cta-secondary'}>
+                    {plan.cta}
+                  </Link>
+                  <ul className="pricing-features">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="pricing-feature-item">
+                        <span className="pricing-feature-check">✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <p className="pricing-note anim-item">All plans include Twilio SMS, PocketBase storage, and Railway hosting. Twilio usage billed separately at cost.</p>
+          </div>
+        </section>
+
+        {/* ── Testimonials ──────────────────────────────────────────────── */}
+        <section className="section section-alt" id="testimonials" ref={testimonialsRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">Testimonials</div>
+              <h2 className="section-title">Operators love Ariva</h2>
+            </div>
+            <div className="testimonial-grid">
+              {TESTIMONIALS.map((t, i) => (
+                <div key={i} className={`testimonial-card anim-item anim-delay-${i + 1}`}>
+                  <StarRating rating={t.rating} />
+                  <blockquote className="testimonial-quote">"{t.quote}"</blockquote>
+                  <div className="testimonial-author">
+                    <div className="testimonial-avatar">{t.avatar}</div>
+                    <div>
+                      <div className="testimonial-name">{t.name}</div>
+                      <div className="testimonial-role">{t.role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ───────────────────────────────────────────────────────── */}
+        <section className="section" id="faq" ref={faqRef}>
+          <div className="container">
+            <div className="section-header anim-item">
+              <div className="section-eyebrow">FAQ</div>
+              <h2 className="section-title">Questions answered</h2>
+            </div>
+            <div className="faq-list">
+              {FAQS.map((f, i) => (
+                <div key={i} className="anim-item anim-delay-1">
+                  <FaqItem q={f.q} a={f.a} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Final CTA ─────────────────────────────────────────────────── */}
+        <section className="cta-section" ref={ctaRef}>
+          <div className="cta-orbs" aria-hidden="true">
+            <div className="orb cta-orb-1"/>
+            <div className="orb cta-orb-2"/>
+          </div>
+          <div className="container">
+            <div className="cta-content anim-ready">
+              <h2 className="cta-title">
+                Your next booking is ringing right now.<br/>
+                <span className="text-gradient-animated">Will Aria answer it?</span>
+              </h2>
+              <p className="cta-subtitle">
+                Join transport operators who've stopped missing calls and started growing — starting free, no credit card required.
+              </p>
+              <div className="cta-actions">
+                <Link href="/signup" className="btn-cta-primary">
+                  Start free today
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 10h12M10 4l6 6-6 6"/></svg>
+                </Link>
+                <Link href="/login" className="btn-cta-ghost">Already have an account</Link>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Pricing */}
-        <section className="lp-section" id="pricing">
-          <div className="lp-tag">Pricing</div>
-          <h2 className="lp-h2">Simple, transparent pricing</h2>
-          <p className="lp-sub">Start free. Scale when you are ready. No hidden fees.</p>
-          <div className="lp-pricing">
-            <div className="lp-plan">
-              <div className="lp-planname">Starter</div>
-              <div className="lp-planprice">Free<span> / month</span></div>
-              <div className="lp-plandesc">Perfect for testing or small operations.</div>
-              <ul className="lp-planfeats">
-                {['Up to 50 bookings/month','AI voice agent','Dashboard access','SMS confirmation','1 admin user'].map(f => <li key={f}>{f}</li>)}
-              </ul>
-              <Link href="/signup" className="lp-plancta lp-plancta-ghost" target="_blank" rel="noopener noreferrer">Get started free</Link>
-            </div>
-
-            <div className="lp-plan hot">
-              <div className="lp-planbadge">Most popular</div>
-              <div className="lp-planname">Professional</div>
-              <div className="lp-planprice">$49<span> / month</span></div>
-              <div className="lp-plandesc">For growing transport businesses.</div>
-              <ul className="lp-planfeats">
-                {['Unlimited bookings','AI voice agent + pricing engine','Driver management','Revenue tracking + CSV exports','SMS reminders + admin alerts','Up to 10 users','Priority support'].map(f => <li key={f}>{f}</li>)}
-              </ul>
-              <Link href="/signup?plan=professional" className="lp-plancta lp-plancta-solid" target="_blank" rel="noopener noreferrer">Start free trial</Link>
-            </div>
-
-            <div className="lp-plan">
-              <div className="lp-planname">Enterprise</div>
-              <div className="lp-planprice">Custom</div>
-              <div className="lp-plandesc">For fleets and multi-location operations.</div>
-              <ul className="lp-planfeats">
-                {['Everything in Professional','Multi-company SaaS setup','Custom AI voice and branding','Dedicated Twilio number','White-label dashboard','Unlimited users','SLA + dedicated support'].map(f => <li key={f}>{f}</li>)}
-              </ul>
-              <a href="mailto:hello@ariva.ai" className="lp-plancta lp-plancta-ghost">Contact us</a>
             </div>
           </div>
         </section>
+      </main>
 
-        {/* CTA band */}
-        <div className="lp-ctaband">
-          <h2>Ready to automate your bookings?</h2>
-          <p>Set up in under 30 minutes. No coding required.</p>
-          <div className="lp-ctabandctas">
-            <Link href="/signup" className="lp-btn lp-btn-primary lp-btn-lg" target="_blank" rel="noopener noreferrer">Start free today →</Link>
-            <Link href="/login" className="lp-btn lp-btn-ghost lp-btn-lg">Sign in to dashboard</Link>
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <div className="footer-logo">
+                <span className="footer-logo-icon">✈</span>
+                <span className="footer-logo-text">Ariva</span>
+              </div>
+              <p className="footer-tagline">The AI that answers your phones, captures your bookings, and grows your fleet.</p>
+              <div className="footer-socials">
+                <a href="#" className="footer-social" aria-label="Twitter">𝕏</a>
+                <a href="#" className="footer-social" aria-label="LinkedIn">in</a>
+              </div>
+            </div>
+            <div className="footer-col">
+              <div className="footer-col-title">Product</div>
+              <a href="#features"      className="footer-link">Features</a>
+              <a href="#how-it-works"  className="footer-link">How it works</a>
+              <a href="#pricing"       className="footer-link">Pricing</a>
+              <a href="#faq"           className="footer-link">FAQ</a>
+            </div>
+            <div className="footer-col">
+              <div className="footer-col-title">Company</div>
+              <a href="#" className="footer-link">About</a>
+              <a href="#" className="footer-link">Blog</a>
+              <a href="#" className="footer-link">Careers</a>
+              <a href="mailto:hello@ariva.ai" className="footer-link">Contact</a>
+            </div>
+            <div className="footer-col">
+              <div className="footer-col-title">Legal</div>
+              <a href="#" className="footer-link">Privacy policy</a>
+              <a href="#" className="footer-link">Terms of service</a>
+              <a href="#" className="footer-link">Cookie policy</a>
+              <a href="#" className="footer-link">GDPR</a>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p className="footer-copy">© {new Date().getFullYear()} Ariva. All rights reserved.</p>
+            <p className="footer-built">Built with AI, for the humans who move people.</p>
           </div>
         </div>
-
-        {/* Footer */}
-        <footer className="lp-footer">
-          <Link href="/" className="lp-logo" style={{fontSize:18}}>
-            <div className="lp-logo-mark" style={{width:28,height:28,fontSize:14}}>🚗</div>
-            Ariva
-          </Link>
-          <div className="lp-footerlinks">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <Link href="/login">Dashboard</Link>
-            <a href="mailto:hello@ariva.ai">Contact</a>
-          </div>
-          <p>© 2026 Ariva. All rights reserved.</p>
-        </footer>
-      </div>
+      </footer>
     </>
   );
 }
