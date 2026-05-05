@@ -70,6 +70,22 @@ export function AuthProvider({ children }) {
     return auth.record;
   }
 
+  async function loginWithGoogle() {
+    const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
+    const record   = authData.record;
+
+    // Backfill full_name from Google if not already stored
+    if (!record.full_name && authData.meta?.name) {
+      try {
+        await pb.collection('users').update(record.id, { full_name: authData.meta.name });
+      } catch {}
+    }
+
+    const fresh = pb.authStore.model;
+    setUser(fresh);
+    return fresh;
+  }
+
   async function sendVerificationEmail(email) {
     await pb.collection('users').requestVerification(email);
   }
@@ -88,7 +104,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, sendVerificationEmail, requestPasswordReset, confirmPasswordReset }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, sendVerificationEmail, requestPasswordReset, confirmPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );

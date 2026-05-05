@@ -1,75 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { checkPasswordStrength } from '@/lib/auth';
+import { useAuth, checkPasswordStrength } from '@/lib/auth';
 import { api } from '@/lib/api';
 import '@/styles/auth.css';
-
-/* ─── Session storage helpers ─────────────────────────────────────────────── */
-const STORAGE_KEY = 'ariva_signup';
-function readStorage()   { try { const r = sessionStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
-function writeStorage(v) { try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(v)); } catch {} }
-function clearStorage()  { try { sessionStorage.removeItem(STORAGE_KEY); } catch {} }
-
-/* ─── Step bar ────────────────────────────────────────────────────────────── */
-const STEPS = [
-  { num: 1, label: 'Account' },
-  { num: 2, label: 'Company' },
-  { num: 3, label: 'Verify'  },
-  { num: 4, label: 'Done'    },
-];
-
-function StepBar({ current }) {
-  return (
-    <div className="auth-steps">
-      {STEPS.map((s, i) => {
-        const done   = current > s.num;
-        const active = current === s.num;
-        return (
-          <div key={s.num} style={{ display: 'flex', alignItems: 'center' }}>
-            <div className="auth-step">
-              <div className={`auth-step-dot ${done ? 'auth-step-dot-done' : active ? 'auth-step-dot-active' : 'auth-step-dot-pending'}`}>
-                {done ? '✓' : s.num}
-              </div>
-              <span className={`auth-step-label ${done || active ? 'auth-step-label-active' : 'auth-step-label-pending'}`}>
-                {s.label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div className={`auth-step-line ${done ? 'auth-step-line-done' : 'auth-step-line-pending'}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─── Shared field component ──────────────────────────────────────────────── */
-function Field({ label, type = 'text', value, onChange, onBlur, placeholder, required, helper, error, optional, children }) {
-  return (
-    <div className="auth-field">
-      <label className="auth-label">
-        {label}
-        {required && <span className="auth-label-required">*</span>}
-        {optional && <span className="auth-label-optional">(optional)</span>}
-      </label>
-      {children ?? (
-        <input
-          type={type}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          className={`auth-input${error ? ' auth-input-err' : ''}`}
-        />
-      )}
-      {error  && <p className="auth-field-error">{error}</p>}
-      {helper && !error && <p className="auth-helper">{helper}</p>}
-    </div>
-  );
-}
 
 /* ─── Password strength bar ───────────────────────────────────────────────── */
 function PasswordStrengthBar({ password }) {
@@ -91,239 +26,231 @@ function PasswordStrengthBar({ password }) {
   );
 }
 
-/* ─── Step 1 — Account details ────────────────────────────────────────────── */
-function Step1({ data, onNext }) {
-  const [name,    setName]    = useState(data.name    ?? '');
-  const [email,   setEmail]   = useState(data.email   ?? '');
-  const [pass,    setPass]    = useState(data.pass    ?? '');
-  const [confirm, setConfirm] = useState(data.confirm ?? '');
-  const [errors,  setErrors]  = useState({});
-  const [emailChecking, setEmailChecking] = useState(false);
+/* ─── Method selector ─────────────────────────────────────────────────────── */
+function MethodSelect({ onEmail, onGoogle, googleLoading, googleError }) {
+  return (
+    <>
+      <div className="auth-header">
+        <h1 className="auth-title">Create your account</h1>
+        <p className="auth-subtitle">Start your free Ariva trial — no credit card required.</p>
+      </div>
+
+      {googleError && <div className="auth-alert auth-alert-error">{googleError}</div>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+        <button
+          className="auth-btn auth-btn-google"
+          onClick={onGoogle}
+          disabled={googleLoading}
+          type="button"
+        >
+          {googleLoading ? (
+            <span className="auth-spinner" style={{ width: 18, height: 18, borderWidth: 2, margin: 0 }} />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+          )}
+          Continue with Google
+        </button>
+      </div>
+
+      <div className="auth-divider">
+        <span>or</span>
+      </div>
+
+      <button className="auth-btn auth-btn-secondary" onClick={onEmail} type="button" style={{ marginTop: 0 }}>
+        Sign up with email
+      </button>
+
+      <div className="auth-links-center" style={{ marginTop: 22 }}>
+        <span className="auth-muted">
+          Already have an account? <Link href="/login">Sign in</Link>
+        </span>
+      </div>
+    </>
+  );
+}
+
+/* ─── Email signup form ───────────────────────────────────────────────────── */
+function EmailForm({ onBack, onSuccess }) {
+  const [name,     setName]     = useState('');
+  const [username, setUsername] = useState('');
+  const [email,    setEmail]    = useState('');
+  const [pass,     setPass]     = useState('');
+  const [errors,   setErrors]   = useState({});
+  const [loading,  setLoading]  = useState(false);
+  const [globalError, setGlobalError] = useState('');
+
+  const [emailChecking,    setEmailChecking]    = useState(false);
+  const [usernameChecking, setUsernameChecking] = useState(false);
 
   const strength = checkPasswordStrength(pass);
 
-  async function checkEmailExists() {
+  async function checkEmail() {
     if (!email.includes('@')) return;
     setEmailChecking(true);
     try {
       const res  = await api(`/auth/check-email?email=${encodeURIComponent(email)}`);
       const json = await res.json();
-      if (json.exists) setErrors(p => ({ ...p, email: 'This email is already registered. Sign in instead.' }));
-    } catch { /* fail silently */ }
+      if (json.exists) setErrors(p => ({ ...p, email: 'This email is already registered.' }));
+    } catch {}
     finally { setEmailChecking(false); }
   }
 
-  function submit(e) {
-    e.preventDefault();
-    const errs = {};
-    if (!name.trim())         errs.name    = 'Full name is required';
-    if (!email.includes('@')) errs.email   = 'Enter a valid email address';
-    else if (errors.email)    errs.email   = errors.email;
-    if (pass.length < 8)      errs.pass    = 'Password must be at least 8 characters';
-    if (strength.score < 2)   errs.pass    = 'Password is too weak — ' + (strength.tips[0] ?? 'choose a stronger password');
-    if (pass !== confirm)      errs.confirm = 'Passwords do not match';
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    onNext({ name, email, pass, confirm });
-  }
-
-  return (
-    <form onSubmit={submit}>
-      <Field label="Full name" value={name} onChange={setName} placeholder="Your full name" required error={errors.name} />
-
-      <Field
-        label="Email address" type="email" value={email}
-        onChange={v => { setEmail(v); if (errors.email) setErrors(p => ({ ...p, email: '' })); }}
-        onBlur={checkEmailExists}
-        placeholder="you@company.com" required error={errors.email}
-        helper={emailChecking ? 'Checking availability…' : undefined}
-      />
-
-      <div className="auth-field">
-        <label className="auth-label">
-          Password <span className="auth-label-required">*</span>
-        </label>
-        <input
-          type="password" value={pass}
-          onChange={e => setPass(e.target.value)}
-          placeholder="Create a strong password"
-          className={`auth-input${errors.pass ? ' auth-input-err' : ''}`}
-        />
-        <PasswordStrengthBar password={pass} />
-        {errors.pass && <p className="auth-field-error">{errors.pass}</p>}
-      </div>
-
-      <Field
-        label="Confirm password" type="password" value={confirm}
-        onChange={setConfirm} placeholder="Repeat your password"
-        required error={errors.confirm}
-      />
-
-      <button type="submit" className="auth-btn auth-btn-primary">Continue →</button>
-
-      <div className="auth-links-center" style={{ marginTop: 20 }}>
-        <span className="auth-muted">
-          Already have an account? <Link href="/login">Sign in</Link>
-        </span>
-      </div>
-    </form>
-  );
-}
-
-/* ─── Step 2 — Company setup ──────────────────────────────────────────────── */
-function Step2({ data, onNext, onBack }) {
-  const [companyName,  setCompanyName]  = useState(data.companyName ?? '');
-  const [slug,         setSlug]         = useState(data.slug        ?? '');
-  const [city,         setCity]         = useState(data.city        ?? 'Lagos');
-  const [phone,        setPhone]        = useState(data.phone       ?? '');
-  const [logo,         setLogo]         = useState(null);
-  const [logoPreview,  setLogoPreview]  = useState(null);
-  const [errors,       setErrors]       = useState({});
-  const [slugChecking, setSlugChecking] = useState(false);
-
-  function handleName(v) {
-    setCompanyName(v);
-    const derived = v.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    setSlug(derived);
-    if (errors.slug) setErrors(p => ({ ...p, slug: '' }));
-  }
-
-  async function checkSlugExists() {
-    if (!slug.trim()) return;
-    setSlugChecking(true);
+  async function checkUsername() {
+    const u = username.trim();
+    if (!u || u.length < 3) return;
+    setUsernameChecking(true);
     try {
-      const res  = await api(`/auth/check-slug?slug=${encodeURIComponent(slug)}`);
+      const res  = await api(`/auth/check-username?username=${encodeURIComponent(u)}`);
       const json = await res.json();
-      if (json.exists) setErrors(p => ({ ...p, slug: 'This slug is already taken. Try a different company name.' }));
-    } catch { /* fail silently */ }
-    finally { setSlugChecking(false); }
+      if (json.exists) setErrors(p => ({ ...p, username: 'This username is already taken.' }));
+    } catch {}
+    finally { setUsernameChecking(false); }
   }
 
-  function validatePhone() {
-    if (!phone.trim()) return;
-    const digits = phone.replace(/\D/g, '');
-    if (!phone.startsWith('+') || digits.length < 7)
-      setErrors(p => ({ ...p, phone: 'Enter a valid phone number starting with + (e.g. +234…)' }));
+  function handleUsername(v) {
+    // only allow letters, numbers, underscores, hyphens
+    const clean = v.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    setUsername(clean);
+    if (errors.username) setErrors(p => ({ ...p, username: '' }));
   }
 
-  function handleLogo(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setErrors(p => ({ ...p, logo: 'Logo must be under 2MB' })); return; }
-    setLogo(file);
-    setLogoPreview(URL.createObjectURL(file));
-    setErrors(p => ({ ...p, logo: null }));
-  }
-
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     const errs = {};
-    if (!companyName.trim()) errs.companyName = 'Company name is required';
-    if (!slug.trim())        errs.slug        = 'Slug is required';
-    else if (errors.slug)    errs.slug        = errors.slug;
-    if (errors.phone)        errs.phone       = errors.phone;
+    if (!name.trim())                   errs.name     = 'Full name is required';
+    if (!username.trim())               errs.username = 'Username is required';
+    else if (username.length < 3)       errs.username = 'Username must be at least 3 characters';
+    else if (errors.username)           errs.username = errors.username;
+    if (!email.includes('@'))           errs.email    = 'Enter a valid email address';
+    else if (errors.email)              errs.email    = errors.email;
+    if (pass.length < 8)                errs.pass     = 'Password must be at least 8 characters';
+    if (strength.score < 2)             errs.pass     = 'Password is too weak — ' + (strength.tips[0] ?? 'choose a stronger one');
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    onNext({ companyName, slug, city, phone, logo });
+
+    setLoading(true); setGlobalError('');
+    try {
+      const res  = await api('/auth/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, username, email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Registration failed.');
+      onSuccess(email);
+    } catch (err) {
+      setGlobalError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={submit}>
-      <Field
-        label="Company name" value={companyName} onChange={handleName}
-        onBlur={checkSlugExists} placeholder="e.g. Blessed Global Transportation"
-        required error={errors.companyName}
-      />
-
-      <Field
-        label="URL slug" value={slug}
-        onChange={v => { setSlug(v); if (errors.slug) setErrors(p => ({ ...p, slug: '' })); }}
-        onBlur={checkSlugExists} placeholder="e.g. blessed-global" required
-        error={errors.slug}
-        helper={slugChecking ? 'Checking availability…' : 'Lowercase letters, numbers and hyphens only'}
-      />
-
-      <div className="auth-field-row">
-        <Field label="City" value={city} onChange={setCity} placeholder="e.g. Lagos" />
-        <Field
-          label="Business phone" value={phone}
-          onChange={v => { setPhone(v); if (errors.phone) setErrors(p => ({ ...p, phone: '' })); }}
-          onBlur={validatePhone} placeholder="+234…" error={errors.phone}
-        />
+    <>
+      <div className="auth-header">
+        <h1 className="auth-title">Create your account</h1>
+        <p className="auth-subtitle">Start your free Ariva trial</p>
       </div>
 
-      {/* Logo upload */}
-      <div className="auth-field">
-        <label className="auth-label">
-          Company logo <span className="auth-label-optional">max 2MB</span>
-        </label>
-        <div className="auth-logo-upload">
-          {logoPreview
-            ? <img src={logoPreview} alt="Logo" className="auth-logo-preview" />
-            : <div className="auth-logo-placeholder">🏢</div>
-          }
-          <label className="auth-logo-upload-btn">
-            {logoPreview ? 'Change logo' : 'Upload logo'}
-            <input type="file" accept="image/*" onChange={handleLogo} style={{ display: 'none' }} />
-          </label>
-          {logoPreview && (
-            <button type="button" className="auth-logo-remove"
-              onClick={() => { setLogo(null); setLogoPreview(null); }}>
-              Remove
-            </button>
-          )}
+      {globalError && <div className="auth-alert auth-alert-error">{globalError}</div>}
+
+      <form onSubmit={submit}>
+        {/* Full name */}
+        <div className="auth-field">
+          <label className="auth-label">Full name <span className="auth-label-required">*</span></label>
+          <input className={`auth-input${errors.name ? ' auth-input-err' : ''}`}
+            value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" />
+          {errors.name && <p className="auth-field-error">{errors.name}</p>}
         </div>
-        {errors.logo && <p className="auth-field-error">{errors.logo}</p>}
-      </div>
 
-      <button type="submit" className="auth-btn auth-btn-primary">Continue →</button>
-      <button type="button" className="auth-btn auth-btn-secondary" onClick={onBack}>← Back</button>
-    </form>
+        {/* Username */}
+        <div className="auth-field">
+          <label className="auth-label">Username <span className="auth-label-required">*</span></label>
+          <input className={`auth-input${errors.username ? ' auth-input-err' : ''}`}
+            value={username}
+            onChange={e => handleUsername(e.target.value)}
+            onBlur={checkUsername}
+            placeholder="yourname (letters, numbers, _ -)"
+            autoComplete="username"
+          />
+          {errors.username
+            ? <p className="auth-field-error">{errors.username}</p>
+            : usernameChecking
+              ? <p className="auth-helper">Checking availability…</p>
+              : username.length >= 3 && <p className="auth-helper">@{username}</p>
+          }
+        </div>
+
+        {/* Email */}
+        <div className="auth-field">
+          <label className="auth-label">Email address <span className="auth-label-required">*</span></label>
+          <input type="email" className={`auth-input${errors.email ? ' auth-input-err' : ''}`}
+            value={email}
+            onChange={e => { setEmail(e.target.value); if (errors.email) setErrors(p => ({ ...p, email: '' })); }}
+            onBlur={checkEmail}
+            placeholder="you@company.com"
+          />
+          {errors.email
+            ? <p className="auth-field-error">{errors.email}</p>
+            : emailChecking && <p className="auth-helper">Checking availability…</p>
+          }
+        </div>
+
+        {/* Password */}
+        <div className="auth-field">
+          <label className="auth-label">Password <span className="auth-label-required">*</span></label>
+          <input type="password" className={`auth-input${errors.pass ? ' auth-input-err' : ''}`}
+            value={pass} onChange={e => setPass(e.target.value)} placeholder="Create a strong password" />
+          <PasswordStrengthBar password={pass} />
+          {errors.pass && <p className="auth-field-error">{errors.pass}</p>}
+        </div>
+
+        <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+          {loading ? 'Creating account…' : 'Create account →'}
+        </button>
+      </form>
+
+      <button type="button" className="auth-btn auth-btn-secondary" onClick={onBack} style={{ marginTop: 10 }}>
+        ← Back
+      </button>
+    </>
   );
 }
 
-/* ─── Step 3 — Verify email ───────────────────────────────────────────────── */
-function Step3({ email, onNext, onResend }) {
-  const [resent,  setResent]  = useState(false);
-  const [loading, setLoading] = useState(false);
+/* ─── Verification waiting screen ─────────────────────────────────────────── */
+function VerifyScreen({ email, onResend }) {
+  const [resent, setResent] = useState(false);
 
   async function handleResend() {
-    setResent(false);
     await onResend();
     setResent(true);
     setTimeout(() => setResent(false), 5000);
   }
 
   return (
-    <div>
-      <div className="auth-verify-email">
-        <span className="auth-verify-icon">📧</span>
-        <h3 className="auth-verify-title">Check your inbox</h3>
-        <p className="auth-verify-body">
-          We sent a verification link to<br />
-          <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{email}</strong>
-        </p>
-        <p className="auth-verify-note">
-          Click the link in your email to verify your account, then come back here and click Continue.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        className="auth-btn auth-btn-primary"
-        disabled={loading}
-        onClick={() => onNext()}
-      >
-        I've verified — continue →
-      </button>
-
-      <div className="auth-resend-row">
-        <button
-          className={`auth-btn-link${resent ? ' auth-btn-link-green' : ''}`}
-          onClick={handleResend}
-        >
-          {resent ? '✓ Verification email sent again' : "Didn't get the email? Resend"}
+    <div className="auth-state">
+      <span className="auth-state-icon">📧</span>
+      <h2 className="auth-state-title">Check your inbox</h2>
+      <p className="auth-state-body">
+        We sent a verification link to<br />
+        <strong>{email}</strong><br />
+        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+          Click the link to verify, then sign in to continue setup.
+        </span>
+      </p>
+      <Link href="/login" className="auth-btn auth-btn-primary" style={{ display: 'flex', marginTop: 0 }}>
+        Go to sign in →
+      </Link>
+      <div className="auth-resend-row" style={{ marginTop: 18 }}>
+        <button className={`auth-btn-link${resent ? ' auth-btn-link-green' : ''}`} onClick={handleResend}>
+          {resent ? '✓ Resent!' : "Didn't get it? Resend"}
         </button>
       </div>
-
       <p className="auth-helper" style={{ textAlign: 'center', marginTop: 10 }}>
         Check your spam folder if you don't see it within 2 minutes.
       </p>
@@ -331,81 +258,25 @@ function Step3({ email, onNext, onResend }) {
   );
 }
 
-/* ─── Step 4 — Done ───────────────────────────────────────────────────────── */
-function Step4({ companyName }) {
-  const router = useRouter();
-  return (
-    <div className="auth-state">
-      <span className="auth-state-icon">🎉</span>
-      <h2 className="auth-state-title">You're all set!</h2>
-      <p className="auth-state-body">
-        <strong>{companyName}</strong> is ready.<br />
-        Add pricing rules, connect your Twilio number, then make your first test call.
-      </p>
-      <button
-        className="auth-btn auth-btn-primary"
-        style={{ marginTop: 0 }}
-        onClick={() => { clearStorage(); router.push('/login'); }}
-      >
-        Sign in to your dashboard →
-      </button>
-      <p className="auth-helper" style={{ textAlign: 'center', marginTop: 12 }}>
-        Use the email and password you just created.
-      </p>
-    </div>
-  );
-}
-
-/* ─── Main signup page ────────────────────────────────────────────────────── */
+/* ─── Main page ───────────────────────────────────────────────────────────── */
 export default function SignupPage() {
-  const [step,       setStep]       = useState(1);
-  const [allData,    setAllData]    = useState({});
-  const [hydrated,   setHydrated]   = useState(false);
-  const [error,      setError]      = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { loginWithGoogle } = useAuth();
+  const router              = useRouter();
 
-  useEffect(() => {
-    const saved = readStorage();
-    if (saved) {
-      const data       = saved.allData ?? {};
-      const targetStep = (saved.step === 2 && !data.pass) ? 1 : (saved.step ?? 1);
-      setAllData(data);
-      setStep(targetStep);
-    }
-    setHydrated(true);
-  }, []);
+  const [view,          setView]         = useState('method'); // method | email | verify
+  const [verifyEmail,   setVerifyEmail]  = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError,   setGoogleError]   = useState('');
 
-  useEffect(() => {
-    if (!hydrated) return;
-    const { pass, confirm, ...safeData } = allData;
-    writeStorage({ step, allData: safeData });
-  }, [step, allData, hydrated]);
-
-  async function createAccountAndCompany(companyData = {}) {
-    setSubmitting(true); setError('');
+  async function handleGoogle() {
+    setGoogleLoading(true); setGoogleError('');
     try {
-      const payload = { ...allData, ...companyData };
-      const res = await api('/auth/register', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          name:        payload.name,
-          email:       payload.email,
-          password:    payload.pass,
-          companyName: payload.companyName,
-          slug:        payload.slug,
-          city:        payload.city  ?? '',
-          phone:       payload.phone ?? '',
-          plan:        'starter',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Registration failed. Please try again.');
-      setStep(3);
+      await loginWithGoogle();
+      router.replace('/onboarding');
     } catch (err) {
-      setError(err.message ?? 'Something went wrong. Please try again.');
+      setGoogleError(err.message ?? 'Google sign-in failed. Please try again.');
     } finally {
-      setSubmitting(false);
+      setGoogleLoading(false);
     }
   }
 
@@ -413,16 +284,9 @@ export default function SignupPage() {
     await api('/auth/resend-verification', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email: allData.email }),
+      body:    JSON.stringify({ email: verifyEmail }),
     });
   }
-
-  const titles = {
-    1: { title: 'Create your account', sub: 'Start your free Ariva trial'          },
-    2: { title: 'Set up your company', sub: 'Tell us about your business'           },
-    3: { title: 'Verify your email',   sub: 'One last step before you get started'  },
-    4: { title: '',                    sub: ''                                       },
-  };
 
   return (
     <div className="auth-page">
@@ -441,60 +305,32 @@ export default function SignupPage() {
       </nav>
 
       <div className="auth-body">
-        <div className="auth-wrap-wide">
-
-          {step < 4 && <StepBar current={step} />}
-
+        <div className="auth-wrap">
           <div className="auth-card">
-
-            {step < 4 && (
-              <div className="auth-header">
-                <h1 className="auth-title">{titles[step].title}</h1>
-                <p className="auth-subtitle">{titles[step].sub}</p>
-              </div>
-            )}
-
-            {error && <div className="auth-alert auth-alert-error">{error}</div>}
-            {submitting && (
-              <div className="auth-alert auth-alert-info">
-                Creating your account — please wait…
-              </div>
-            )}
-
-            {step === 1 && (
-              <Step1
-                data={allData}
-                onNext={d => { setAllData(p => ({ ...p, ...d })); setStep(2); }}
+            {view === 'method' && (
+              <MethodSelect
+                onEmail={() => setView('email')}
+                onGoogle={handleGoogle}
+                googleLoading={googleLoading}
+                googleError={googleError}
               />
             )}
-            {step === 2 && (
-              <Step2
-                data={allData}
-                onNext={d => {
-                  const merged = { ...allData, ...d };
-                  setAllData(merged);
-                  createAccountAndCompany(merged);
-                }}
-                onBack={() => setStep(1)}
+            {view === 'email' && (
+              <EmailForm
+                onBack={() => setView('method')}
+                onSuccess={email => { setVerifyEmail(email); setView('verify'); }}
               />
             )}
-            {step === 3 && (
-              <Step3
-                email={allData.email}
-                onNext={() => setStep(4)}
-                onResend={resendVerification}
-              />
+            {view === 'verify' && (
+              <VerifyScreen email={verifyEmail} onResend={resendVerification} />
             )}
-            {step === 4 && <Step4 companyName={allData.companyName} />}
-
           </div>
 
-          {step < 4 && (
+          {view !== 'verify' && (
             <p className="auth-legal">
               By signing up you agree to our Terms of Service and Privacy Policy.
             </p>
           )}
-
         </div>
       </div>
     </div>

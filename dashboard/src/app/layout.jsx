@@ -23,7 +23,7 @@ const NAV = [
   { href:'/users',       label:'Users',         icon:'group',    adminOnly:true    },
 ];
 
-const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout', '/widget'];
+const PUBLIC_PATHS = ['/login', '/signup', '/cancel', '/forgot-password', '/reset-password', '/verify-email', '/plans', '/checkout', '/widget', '/onboarding'];
 const LANDING_PATH = '/';
 
 function isAdmin(user) {
@@ -291,6 +291,10 @@ function Shell({ children }) {
     // Keep landing page accessible; only auto-redirect logged-in users away from signup.
     if (user && pathname.startsWith('/signup')) {
       router.replace('/dashboard');
+    }
+    // New users who authenticated (Google or email) but haven't set up a company yet.
+    if (user && !user.company_id && !pathname.startsWith('/onboarding')) {
+      router.replace('/onboarding');
     }
   }, [user, loading, isPublic, pathname, router]);
 
