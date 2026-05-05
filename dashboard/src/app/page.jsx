@@ -438,9 +438,9 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <FloatingNotif icon="call"                 text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={0.8} side="left"  style={{ top: '12%' }} />
-              <FloatingNotif icon="check_circle"         text="SMS sent to customer"   sub="Confirmation + cancel link"  delay={2.2} side="right" style={{ top: '48%' }} />
-              <FloatingNotif icon="notifications_active" text="Admin alerted"          sub="+44 7700 900123"             delay={3.8} side="left"  style={{ top: '76%' }} />
+              <FloatingNotif icon="check_circle"         text="SMS sent to customer"   sub="Confirmation + cancel link"  delay={0.8} side="right" style={{ top: '38%' }} />
+              <FloatingNotif icon="call"                 text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={2.2} side="right" style={{ top: '64%' }} />
+              <FloatingNotif icon="notifications_active" text="Admin alerted"          sub="+44 7700 900123"             delay={3.8} side="left"  style={{ top: '55%' }} />
             </div>
           </div>
 
