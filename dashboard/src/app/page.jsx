@@ -657,13 +657,13 @@ export default function LandingPage() {
         </section>
 
         {/* ── Final CTA ─────────────────────────────────────────────────── */}
-        <section className="cta-section" ref={ctaRef}>
+        <section className="cta-section">
           <div className="cta-orbs" aria-hidden="true">
             <div className="orb cta-orb-1"/>
             <div className="orb cta-orb-2"/>
           </div>
           <div className="container">
-            <div className="cta-content anim-ready">
+            <div className="cta-content" ref={ctaRef}>
               <h2 className="cta-title">
                 Your next booking is ringing right now.<br/>
                 <span className="text-gradient-animated">Will Aria answer it?</span>
