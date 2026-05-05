@@ -126,7 +126,7 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
       ) : (
         <div style={{ padding:'12px 14px', borderBottom:'0.5px solid var(--border)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            {/* Company logo or Ariva brand mark — emoji is always rendered;
+            {/* Company logo or Arrival brand mark — emoji is always rendered;
                 img overlays it and hides itself on load error */}
             <div style={{ position:'relative', width:44, height:44, flexShrink:0 }}>
               <div style={{ width:44, height:44, borderRadius:8, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>🚗</div>
@@ -140,7 +140,7 @@ function SidebarContent({ collapsed, theme, toggleTheme, user, company, onSignOu
               )}
             </div>
             <p style={{ fontSize:13, fontWeight:700, color:'var(--accent)', letterSpacing:'-0.01em', lineHeight:1.2 }}>
-              {company?.name ? company.name.split(' ')[0] : 'Ariva'}
+              {company?.name ? company.name.split(' ')[0] : 'Arrival'}
             </p>
           </div>
 

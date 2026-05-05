@@ -99,7 +99,7 @@ export default function CheckoutPage() {
         <div className="co-header" style={{ borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', position:'relative', zIndex:1 }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, fontFamily:'Syne, sans-serif', fontWeight:800, fontSize:20, color:'#fff', textDecoration:'none' }}>
             <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>🚗</div>
-            Ariva
+            Arrival
           </Link>
           <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>Secure checkout</span>
@@ -119,7 +119,7 @@ export default function CheckoutPage() {
                 <div style={{ marginBottom:20, paddingBottom:20, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                     <div>
-                      <p style={{ fontFamily:'Syne, sans-serif', fontSize:18, fontWeight:700 }}>Ariva Professional</p>
+                      <p style={{ fontFamily:'Syne, sans-serif', fontSize:18, fontWeight:700 }}>Arrival Professional</p>
                       <p style={{ fontSize:13, color:'rgba(255,255,255,0.4)', marginTop:3 }}>per month</p>
                     </div>
                     <div style={{ textAlign:'right' }}>

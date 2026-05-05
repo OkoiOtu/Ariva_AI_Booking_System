@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
           <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
-          Ariva
+          Arrival
         </Link>
       </nav>
 

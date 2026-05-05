@@ -83,7 +83,7 @@ export default function LoginPage() {
       clearLockoutState(email);
       router.replace('/dashboard');
     } catch (err) {
-      if (err.message === 'AUTHOR')    { setError('Author accounts are not permitted here. Use the Ariva Admin portal.'); setLoading(false); return; }
+      if (err.message === 'AUTHOR')    { setError('Author accounts are not permitted here. Use the Arrival Admin portal.'); setLoading(false); return; }
       if (err.message === 'SUSPENDED') { setError('This account has been suspended. Please contact your administrator.'); setLoading(false); return; }
       if (err.message === 'UNVERIFIED'){ setError('Please verify your email before signing in. Check your inbox.'); setLoading(false); return; }
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
           <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
-          Ariva
+          Arrival
         </Link>
         <span className="auth-nav-right">
           No account? <Link href="/signup">Sign up free</Link>
@@ -126,7 +126,7 @@ export default function LoginPage() {
           <div className="auth-card">
             <div className="auth-header">
               <h1 className="auth-title">Welcome back</h1>
-              <p className="auth-subtitle">Sign in to your Ariva dashboard</p>
+              <p className="auth-subtitle">Sign in to your Arrival dashboard</p>
             </div>
 
             {error && (

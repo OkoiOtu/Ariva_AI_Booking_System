@@ -17,27 +17,33 @@ const NAV_LINKS = [
 ];
 
 const TRANSPORT_TYPES = [
-  '🚌 Coach Hire', '🚐 Minibus', '✈️ Airport Transfer', '🚗 Executive Cars',
-  '🏎️ Chauffeur Service', '🚎 Party Bus', '🚑 Medical Transport', '🛻 SUV Fleet',
-  '🚕 Taxi Dispatch', '🚀 VIP Transport', '🚌 Coach Hire', '🚐 Minibus',
-  '✈️ Airport Transfer', '🚗 Executive Cars', '🏎️ Chauffeur Service',
+  { icon: 'directions_bus',  label: 'Coach Hire' },
+  { icon: 'airport_shuttle', label: 'Minibus' },
+  { icon: 'flight',          label: 'Airport Transfer' },
+  { icon: 'directions_car',  label: 'Executive Cars' },
+  { icon: 'star',            label: 'Chauffeur Service' },
+  { icon: 'celebration',     label: 'Party Bus' },
+  { icon: 'local_hospital',  label: 'Medical Transport' },
+  { icon: 'rv_hookup',       label: 'SUV Fleet' },
+  { icon: 'local_taxi',      label: 'Taxi Dispatch' },
+  { icon: 'diamond',         label: 'VIP Transport' },
 ];
 
 const PAIN_POINTS = [
   {
-    icon: '📵',
+    icon: 'phone_disabled',
     title: 'Calls dropped, revenue gone',
     body: "Every missed call at 2am is a booking that went to your competitor. Your phone can't work 24/7 — your AI can.",
     stat: '73% of callers never call back',
   },
   {
-    icon: '📋',
+    icon: 'assignment_late',
     title: 'Manual booking = costly mistakes',
     body: 'Double-bookings, wrong pickup times, scribbled notes. One dispatcher error can lose you the client forever.',
     stat: '1 in 5 manual bookings has an error',
   },
   {
-    icon: '😤',
+    icon: 'sentiment_very_dissatisfied',
     title: 'Customers expect instant confirmation',
     body: "Saying \"we'll call you back\" is no longer acceptable. Customers book the service that responds in 10 seconds.",
     stat: '68% expect same-minute confirmation',
@@ -45,26 +51,26 @@ const PAIN_POINTS = [
 ];
 
 const HOW_IT_WORKS = [
-  { step: '01', icon: '📞', title: 'Customer calls your number',     body: "Your Twilio number rings. Aria answers instantly — in your company's voice, with your pricing, every time." },
-  { step: '02', icon: '🧠', title: 'AI captures every detail',       body: 'Aria asks the right questions: pickup, destination, date, time, passenger count, vehicle preference — then confirms pricing live on the call.' },
-  { step: '03', icon: '📱', title: 'Customer gets instant SMS',       body: 'A confirmation SMS with full trip details and a cancellation link lands on the customer\'s phone within seconds of the call ending.' },
-  { step: '04', icon: '🚗', title: 'Your team gets notified',         body: 'Every admin in your company receives an SMS alert. Your dashboard updates in real time.' },
-  { step: '05', icon: '📊', title: 'You run the business, not the phones', body: 'Track revenue, manage drivers, review calls, and grow — while Aria handles every inbound booking automatically.' },
+  { step: '01', icon: 'call',          title: 'Customer calls your number',          body: "Your Twilio number rings. Aria answers instantly — in your company's voice, with your pricing, every time." },
+  { step: '02', icon: 'psychology',    title: 'AI captures every detail',            body: 'Aria asks the right questions: pickup, destination, date, time, passenger count, vehicle preference — then confirms pricing live on the call.' },
+  { step: '03', icon: 'sms',           title: 'Customer gets instant SMS',            body: "A confirmation SMS with full trip details and a cancellation link lands on the customer's phone within seconds of the call ending." },
+  { step: '04', icon: 'notifications', title: 'Your team gets notified',              body: 'Every admin in your company receives an SMS alert. Your dashboard updates in real time.' },
+  { step: '05', icon: 'monitoring',    title: 'You run the business, not the phones', body: 'Track revenue, manage drivers, review calls, and grow — while Aria handles every inbound booking automatically.' },
 ];
 
 const FEATURES = [
-  { tab: 'AI Voice',  icon: '🎙️', title: '24/7 AI Voice Agent',      body: 'GPT-4o powered voice agent answers every call, understands natural language, handles complex multi-leg bookings, and knows your pricing inside out.' },
-  { tab: 'AI Voice',  icon: '🌍', title: 'Multi-language Ready',      body: 'Aria can converse in English and adapt to local dialects and phrasing — perfect for regional transport companies.' },
-  { tab: 'AI Voice',  icon: '⚡', title: 'Sub-2s Response Time',      body: 'No IVR menus, no hold music. The call is answered and the conversation starts in under 2 seconds.' },
-  { tab: 'Dashboard', icon: '📊', title: 'Real-time Dashboard',       body: 'Live view of all active trips, upcoming bookings, and driver status. Everything updates the moment a call ends.' },
-  { tab: 'Dashboard', icon: '📁', title: 'CSV & PDF Exports',         body: 'Export bookings, leads, and revenue data to CSV or generate customer invoices as PDFs with a single click.' },
-  { tab: 'Dashboard', icon: '👥', title: 'Multi-user Roles',          body: 'Super admin, admin, and user roles. Each person sees exactly what they need — nothing more, nothing less.' },
-  { tab: 'Drivers',   icon: '🗺️', title: 'Smart Driver Assignment',   body: "Assign drivers to trips from the dashboard. Conflict detection prevents double-booking any driver for overlapping trips." },
-  { tab: 'Drivers',   icon: '🔔', title: 'Driver Notifications',      body: "Drivers receive SMS when they're assigned a trip. Includes pickup time, address, and passenger details." },
-  { tab: 'Drivers',   icon: '🛩️', title: 'Flight Tracking',           body: 'Track inbound flights and auto-adjust pickup times when a flight is delayed. No more stranded passengers.' },
-  { tab: 'Revenue',   icon: '💰', title: 'Dynamic Pricing Rules',     body: 'Set hourly rates, flat fares, or route-specific pricing. Aria quotes the correct price on every call automatically.' },
-  { tab: 'Revenue',   icon: '📈', title: 'Revenue Analytics',         body: 'See monthly revenue, peak booking hours, top routes, and conversion rate from lead to confirmed booking.' },
-  { tab: 'Revenue',   icon: '💳', title: 'Paystack Payments',         body: 'Accept card payments for subscription plans. Automated plan upgrades keep your team operational without manual invoicing.' },
+  { tab: 'AI Voice',  icon: 'mic',          title: '24/7 AI Voice Agent',     body: 'GPT-4o powered voice agent answers every call, understands natural language, handles complex multi-leg bookings, and knows your pricing inside out.' },
+  { tab: 'AI Voice',  icon: 'language',     title: 'Multi-language Ready',     body: 'Aria can converse in English and adapt to local dialects and phrasing — perfect for regional transport companies.' },
+  { tab: 'AI Voice',  icon: 'bolt',         title: 'Sub-2s Response Time',     body: 'No IVR menus, no hold music. The call is answered and the conversation starts in under 2 seconds.' },
+  { tab: 'Dashboard', icon: 'bar_chart',    title: 'Real-time Dashboard',      body: 'Live view of all active trips, upcoming bookings, and driver status. Everything updates the moment a call ends.' },
+  { tab: 'Dashboard', icon: 'file_download',title: 'CSV & PDF Exports',        body: 'Export bookings, leads, and revenue data to CSV or generate customer invoices as PDFs with a single click.' },
+  { tab: 'Dashboard', icon: 'group',        title: 'Multi-user Roles',         body: 'Super admin, admin, and user roles. Each person sees exactly what they need — nothing more, nothing less.' },
+  { tab: 'Drivers',   icon: 'map',          title: 'Smart Driver Assignment',  body: 'Assign drivers to trips from the dashboard. Conflict detection prevents double-booking any driver for overlapping trips.' },
+  { tab: 'Drivers',   icon: 'notifications',title: 'Driver Notifications',     body: "Drivers receive SMS when they're assigned a trip. Includes pickup time, address, and passenger details." },
+  { tab: 'Drivers',   icon: 'flight',       title: 'Flight Tracking',          body: 'Track inbound flights and auto-adjust pickup times when a flight is delayed. No more stranded passengers.' },
+  { tab: 'Revenue',   icon: 'payments',     title: 'Dynamic Pricing Rules',    body: 'Set hourly rates, flat fares, or route-specific pricing. Aria quotes the correct price on every call automatically.' },
+  { tab: 'Revenue',   icon: 'trending_up',  title: 'Revenue Analytics',        body: 'See monthly revenue, peak booking hours, top routes, and conversion rate from lead to confirmed booking.' },
+  { tab: 'Revenue',   icon: 'credit_card',  title: 'Paystack Payments',        body: 'Accept card payments for subscription plans. Automated plan upgrades keep your team operational without manual invoicing.' },
 ];
 
 const PLANS = [
@@ -92,7 +98,7 @@ const PLANS = [
     price: { monthly: null, annual: null },
     desc: 'Custom pricing for large fleets and white-label.',
     cta: 'Contact us',
-    href: 'mailto:hello@ariva.ai',
+    href: 'mailto:hello@arrival.ai',
     features: ['Unlimited everything', 'Unlimited users', 'Custom AI persona', 'White-label dashboard', 'SLA guarantee', 'Dedicated account manager'],
     highlight: false,
   },
@@ -100,7 +106,7 @@ const PLANS = [
 
 const TESTIMONIALS = [
   {
-    quote: "We were losing 30-40 calls a week to voicemail. Ariva turned those missed calls into £8,000 in new bookings in the first month. It pays for itself a hundred times over.",
+    quote: "We were losing 30-40 calls a week to voicemail. Arrival turned those missed calls into £8,000 in new bookings in the first month. It pays for itself a hundred times over.",
     name: 'Marcus Eze', role: 'Owner, Premier Rides London', avatar: 'ME', rating: 5,
   },
   {
@@ -165,12 +171,12 @@ function ROICalculator() {
   const [missedPct,  setMissedPct]  = useState(30);
   const ref = useScrollAnimation();
 
-  const missedCalls   = Math.round(calls * (missedPct / 100));
-  const monthlyLoss   = missedCalls * bookingVal * 4.3;
-  const arivaRecovery = Math.round(monthlyLoss * 0.85);
-  const planCost      = 49;
-  const monthlyROI    = arivaRecovery - planCost;
-  const yearlyLoss    = monthlyLoss * 12;
+  const missedCalls    = Math.round(calls * (missedPct / 100));
+  const monthlyLoss    = missedCalls * bookingVal * 4.3;
+  const arrivalRecovery = Math.round(monthlyLoss * 0.85);
+  const planCost       = 49;
+  const monthlyROI     = arrivalRecovery - planCost;
+  const yearlyLoss     = monthlyLoss * 12;
 
   const fmt = n => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
 
@@ -181,7 +187,7 @@ function ROICalculator() {
           <div className="section-eyebrow">Revenue at risk</div>
           <h2 className="section-title">How much are you losing right now?</h2>
           <p className="section-subtitle">
-            Transport businesses lose thousands every month to missed calls. Drag the sliders to see your exact exposure — then see what Ariva recovers.
+            Transport businesses lose thousands every month to missed calls. Drag the sliders to see your exact exposure — then see what Arrival recovers.
           </p>
         </div>
 
@@ -204,7 +210,7 @@ function ROICalculator() {
             ))}
 
             <div className="roi-insight">
-              <span className="roi-insight-icon">📊</span>
+              <span className="roi-insight-icon"><span className="material-symbols-outlined">bar_chart</span></span>
               <p>You miss roughly <strong>{missedCalls} calls/week</strong> — that's <strong>{Math.round(missedCalls * 4.3)} per month</strong> ringing out unanswered.</p>
             </div>
           </div>
@@ -213,23 +219,23 @@ function ROICalculator() {
             <div className="roi-card roi-card-loss">
               <div className="roi-card-label">Monthly revenue at risk</div>
               <div className="roi-card-amount">{fmt(monthlyLoss)}</div>
-              <div className="roi-card-sub">Without Ariva — {fmt(yearlyLoss)}/yr going to competitors</div>
+              <div className="roi-card-sub">Without Arrival — {fmt(yearlyLoss)}/yr going to competitors</div>
             </div>
 
             <div className="roi-card roi-card-recovery">
-              <div className="roi-card-label">Monthly recovery with Ariva</div>
-              <div className="roi-card-amount">{fmt(arivaRecovery)}</div>
+              <div className="roi-card-label">Monthly recovery with Arrival</div>
+              <div className="roi-card-amount">{fmt(arrivalRecovery)}</div>
               <div className="roi-card-sub">Aria captures ~85% of missed calls as confirmed bookings</div>
             </div>
 
             <div className="roi-card roi-card-profit">
               <div className="roi-card-label">Net monthly profit (after £{planCost}/mo plan)</div>
               <div className="roi-card-amount roi-profit-amount">{fmt(monthlyROI)}</div>
-              <div className="roi-card-sub">ROI: {Math.round(monthlyROI / planCost)}× your Ariva subscription</div>
+              <div className="roi-card-sub">ROI: {Math.round(monthlyROI / planCost)}× your Arrival subscription</div>
             </div>
 
             <Link href="/signup?plan=professional" className="roi-cta-btn">
-              Recover {fmt(arivaRecovery)} this month
+              Recover {fmt(arrivalRecovery)} this month
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9h12M9 3l6 6-6 6"/></svg>
             </Link>
 
@@ -255,10 +261,12 @@ function AnimatedStat({ value, suffix = '', prefix = '', label, enabled }) {
 
 /* ─── Floating notification ───────────────────────────────────────────────── */
 
-function FloatingNotif({ icon, text, sub, delay = 0, side = 'right' }) {
+function FloatingNotif({ icon, text, sub, delay = 0, side = 'right', style = {} }) {
   return (
-    <div className={`floating-notif floating-notif-${side}`} style={{ animationDelay: `${delay}s` }}>
-      <span className="floating-notif-icon">{icon}</span>
+    <div className={`floating-notif floating-notif-${side}`} style={{ animationDelay: `${delay}s`, ...style }}>
+      <span className="floating-notif-icon">
+        <span className="material-symbols-outlined">{icon}</span>
+      </span>
       <div>
         <div className="floating-notif-text">{text}</div>
         {sub && <div className="floating-notif-sub">{sub}</div>}
@@ -303,7 +311,7 @@ export default function LandingPage() {
   const faqRef          = useScrollAnimationAll('.anim-item');
   const ctaRef          = useScrollAnimation();
 
-  const featureTabs    = [...new Set(FEATURES.map(f => f.tab))];
+  const featureTabs     = [...new Set(FEATURES.map(f => f.tab))];
   const visibleFeatures = FEATURES.filter(f => f.tab === activeFeatureTab);
 
   return (
@@ -312,8 +320,10 @@ export default function LandingPage() {
       <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
         <div className="nav-inner">
           <Link href="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-            <span className="nav-logo-icon">✈</span>
-            <span className="nav-logo-text">Ariva</span>
+            <span className="nav-logo-icon">
+              <span className="material-symbols-outlined">flight_takeoff</span>
+            </span>
+            <span className="nav-logo-text">Arrival</span>
           </Link>
 
           <ul className="nav-links">
@@ -343,8 +353,8 @@ export default function LandingPage() {
               <a key={l.label} href={l.href} className="nav-mobile-link" onClick={() => setMenuOpen(false)}>{l.label}</a>
             ))}
             <div className="nav-mobile-actions">
-              <Link href="/login"  className="nav-btn-ghost"    onClick={() => setMenuOpen(false)}>Log in</Link>
-              <Link href="/signup" className="nav-btn-primary"  onClick={() => setMenuOpen(false)}>Start free</Link>
+              <Link href="/login"  className="nav-btn-ghost"   onClick={() => setMenuOpen(false)}>Log in</Link>
+              <Link href="/signup" className="nav-btn-primary" onClick={() => setMenuOpen(false)}>Start free</Link>
             </div>
           </div>
         )}
@@ -387,9 +397,9 @@ export default function LandingPage() {
               </div>
 
               <div className="hero-trust">
-                <span className="hero-trust-item">✓ 50 bookings free</span>
-                <span className="hero-trust-item">✓ No setup fees</span>
-                <span className="hero-trust-item">✓ Cancel anytime</span>
+                <span className="hero-trust-item"><span className="material-symbols-outlined">check</span>50 bookings free</span>
+                <span className="hero-trust-item"><span className="material-symbols-outlined">check</span>No setup fees</span>
+                <span className="hero-trust-item"><span className="material-symbols-outlined">check</span>Cancel anytime</span>
               </div>
             </div>
 
@@ -397,7 +407,7 @@ export default function LandingPage() {
               <div className="hero-mockup">
                 <div className="hero-mockup-bar">
                   <span/><span/><span/>
-                  <div className="hero-mockup-title">Ariva Dashboard</div>
+                  <div className="hero-mockup-title">Arrival Dashboard</div>
                 </div>
                 <div className="hero-mockup-content">
                   <div className="hero-mockup-stat-row">
@@ -410,16 +420,16 @@ export default function LandingPage() {
                       <div className="hm-badge hm-badge-confirmed">Confirmed</div>
                       <div className="hm-ref">BK-00042</div>
                     </div>
-                    <div className="hm-booking-detail">📍 Heathrow T2 → Canary Wharf</div>
-                    <div className="hm-booking-detail">🕐 15 Jan · 06:30 · Executive Saloon</div>
+                    <div className="hm-booking-detail"><span className="material-symbols-outlined">location_on</span>Heathrow T2 → Canary Wharf</div>
+                    <div className="hm-booking-detail"><span className="material-symbols-outlined">schedule</span>15 Jan · 06:30 · Executive Saloon</div>
                   </div>
                   <div className="hero-mockup-booking">
                     <div className="hm-booking-row">
                       <div className="hm-badge hm-badge-trip">On trip</div>
                       <div className="hm-ref">BK-00041</div>
                     </div>
-                    <div className="hm-booking-detail">📍 City Airport → Mayfair</div>
-                    <div className="hm-booking-detail">🕐 15 Jan · 05:00 · VIP Mercedes</div>
+                    <div className="hm-booking-detail"><span className="material-symbols-outlined">location_on</span>City Airport → Mayfair</div>
+                    <div className="hm-booking-detail"><span className="material-symbols-outlined">schedule</span>15 Jan · 05:00 · VIP Mercedes</div>
                   </div>
                   <div className="hero-mockup-aria">
                     <div className="aria-pulse"><span/><span/><span/></div>
@@ -428,9 +438,9 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <FloatingNotif icon="📞" text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={0.8} side="left" />
-              <FloatingNotif icon="✅" text="SMS sent to customer"    sub="Confirmation + cancel link"  delay={2.2} side="right" />
-              <FloatingNotif icon="🔔" text="Admin alerted"           sub="+44 7700 900123"             delay={3.8} side="left" />
+              <FloatingNotif icon="call"                 text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={0.8} side="left"  style={{ top: '12%' }} />
+              <FloatingNotif icon="check_circle"         text="SMS sent to customer"   sub="Confirmation + cancel link"  delay={2.2} side="right" style={{ top: '48%' }} />
+              <FloatingNotif icon="notifications_active" text="Admin alerted"          sub="+44 7700 900123"             delay={3.8} side="left"  style={{ top: '76%' }} />
             </div>
           </div>
 
@@ -454,7 +464,9 @@ export default function LandingPage() {
           <div className="marquee-track">
             <div className="marquee-inner animate-marquee">
               {[...TRANSPORT_TYPES, ...TRANSPORT_TYPES].map((t, i) => (
-                <span key={i} className="marquee-item">{t}</span>
+                <span key={i} className="marquee-item">
+                  <span className="material-symbols-outlined">{t.icon}</span>{t.label}
+                </span>
               ))}
             </div>
           </div>
@@ -471,7 +483,7 @@ export default function LandingPage() {
             <div className="pain-grid">
               {PAIN_POINTS.map((p, i) => (
                 <div key={i} className={`pain-card anim-item anim-delay-${i + 1}`}>
-                  <div className="pain-icon">{p.icon}</div>
+                  <div className="pain-icon"><span className="material-symbols-outlined">{p.icon}</span></div>
                   <h3 className="pain-title">{p.title}</h3>
                   <p className="pain-body">{p.body}</p>
                   <div className="pain-stat">{p.stat}</div>
@@ -493,7 +505,7 @@ export default function LandingPage() {
               {HOW_IT_WORKS.map((s, i) => (
                 <div key={i} className={`step anim-item anim-delay-${i + 1}`}>
                   <div className="step-number">{s.step}</div>
-                  <div className="step-icon">{s.icon}</div>
+                  <div className="step-icon"><span className="material-symbols-outlined">{s.icon}</span></div>
                   <h3 className="step-title">{s.title}</h3>
                   <p className="step-body">{s.body}</p>
                   {i < HOW_IT_WORKS.length - 1 && <div className="step-connector" aria-hidden="true"/>}
@@ -527,7 +539,7 @@ export default function LandingPage() {
             <div className="feature-grid">
               {visibleFeatures.map((f, i) => (
                 <div key={`${activeFeatureTab}-${i}`} className={`feature-card anim-item anim-delay-${i + 1}`}>
-                  <div className="feature-icon">{f.icon}</div>
+                  <div className="feature-icon"><span className="material-symbols-outlined">{f.icon}</span></div>
                   <h3 className="feature-title">{f.title}</h3>
                   <p className="feature-body">{f.body}</p>
                 </div>
@@ -589,7 +601,7 @@ export default function LandingPage() {
                   <ul className="pricing-features">
                     {plan.features.map((f, j) => (
                       <li key={j} className="pricing-feature-item">
-                        <span className="pricing-feature-check">✓</span>
+                        <span className="pricing-feature-check"><span className="material-symbols-outlined">check</span></span>
                         {f}
                       </li>
                     ))}
@@ -607,7 +619,7 @@ export default function LandingPage() {
           <div className="container">
             <div className="section-header anim-item">
               <div className="section-eyebrow">Testimonials</div>
-              <h2 className="section-title">Operators love Ariva</h2>
+              <h2 className="section-title">Operators love Arrival</h2>
             </div>
             <div className="testimonial-grid">
               {TESTIMONIALS.map((t, i) => (
@@ -677,8 +689,10 @@ export default function LandingPage() {
           <div className="footer-grid">
             <div className="footer-brand">
               <div className="footer-logo">
-                <span className="footer-logo-icon">✈</span>
-                <span className="footer-logo-text">Ariva</span>
+                <span className="footer-logo-icon">
+                  <span className="material-symbols-outlined">flight_takeoff</span>
+                </span>
+                <span className="footer-logo-text">Arrival</span>
               </div>
               <p className="footer-tagline">The AI that answers your phones, captures your bookings, and grows your fleet.</p>
               <div className="footer-socials">
@@ -688,17 +702,17 @@ export default function LandingPage() {
             </div>
             <div className="footer-col">
               <div className="footer-col-title">Product</div>
-              <a href="#features"      className="footer-link">Features</a>
-              <a href="#how-it-works"  className="footer-link">How it works</a>
-              <a href="#pricing"       className="footer-link">Pricing</a>
-              <a href="#faq"           className="footer-link">FAQ</a>
+              <a href="#features"     className="footer-link">Features</a>
+              <a href="#how-it-works" className="footer-link">How it works</a>
+              <a href="#pricing"      className="footer-link">Pricing</a>
+              <a href="#faq"          className="footer-link">FAQ</a>
             </div>
             <div className="footer-col">
               <div className="footer-col-title">Company</div>
               <a href="#" className="footer-link">About</a>
               <a href="#" className="footer-link">Blog</a>
               <a href="#" className="footer-link">Careers</a>
-              <a href="mailto:hello@ariva.ai" className="footer-link">Contact</a>
+              <a href="mailto:hello@arrival.ai" className="footer-link">Contact</a>
             </div>
             <div className="footer-col">
               <div className="footer-col-title">Legal</div>
@@ -709,7 +723,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p className="footer-copy">© {new Date().getFullYear()} Ariva. All rights reserved.</p>
+            <p className="footer-copy">© {new Date().getFullYear()} Arrival. All rights reserved.</p>
             <p className="footer-built">Built with AI, for the humans who move people.</p>
           </div>
         </div>

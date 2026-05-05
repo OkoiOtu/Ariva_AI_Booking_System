@@ -107,7 +107,7 @@ export default function PlansPage() {
         <div className="plans-header-nav" style={{ position:'relative', zIndex:1, borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, fontFamily:'Syne, sans-serif', fontWeight:800, fontSize:20, color:'#fff', textDecoration:'none' }}>
             <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>🚗</div>
-            Ariva
+            Arrival
           </Link>
           <Link href="/dashboard" style={{ fontSize:13, color:'rgba(255,255,255,0.5)', textDecoration:'none' }}>
             ← Back to dashboard
@@ -196,7 +196,7 @@ export default function PlansPage() {
                       Your current plan
                     </div>
                   ) : plan.key === 'enterprise' ? (
-                    <a href="mailto:hello@ariva.ai" style={{ display:'block', padding:'12px', borderRadius:10, fontSize:14, fontWeight:500, textAlign:'center', background:'transparent', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', textDecoration:'none' }}>
+                    <a href="mailto:hello@arrival.ai" style={{ display:'block', padding:'12px', borderRadius:10, fontSize:14, fontWeight:500, textAlign:'center', background:'transparent', border:'1px solid rgba(255,255,255,0.15)', color:'rgba(255,255,255,0.7)', textDecoration:'none' }}>
                       Contact us
                     </a>
                   ) : (
@@ -215,7 +215,7 @@ export default function PlansPage() {
           <div style={{ marginTop:64, textAlign:'center' }}>
             <p style={{ fontSize:14, color:'rgba(255,255,255,0.35)' }}>
               Questions? Email us at{' '}
-              <a href="mailto:hello@ariva.ai" style={{ color:'#a78bfa', textDecoration:'none' }}>hello@ariva.ai</a>
+              <a href="mailto:hello@arrival.ai" style={{ color:'#a78bfa', textDecoration:'none' }}>hello@arrival.ai</a>
             </p>
           </div>
         </div>

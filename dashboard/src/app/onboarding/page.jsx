@@ -109,7 +109,7 @@ export default function OnboardingPage() {
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
           <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
-          Ariva
+          Arrival
         </Link>
       </nav>
 
@@ -120,7 +120,7 @@ export default function OnboardingPage() {
               <span className="auth-icon"><span className="material-symbols-outlined">business</span></span>
               <h1 className="auth-title">Set up your company</h1>
               <p className="auth-subtitle">
-                Welcome{user.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}! Tell us about your business to finish setting up Ariva.
+                Welcome{user.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}! Tell us about your business to finish setting up Arrival.
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
                   ? <p className="auth-field-error">{errors.slug || slugError}</p>
                   : slugChecking
                     ? <p className="auth-helper">Checking availability…</p>
-                    : slug && !slugError && <p className="auth-helper">ariva.io/{slug}</p>
+                    : slug && !slugError && <p className="auth-helper">arrival.ai/{slug}</p>
                 }
               </div>
 

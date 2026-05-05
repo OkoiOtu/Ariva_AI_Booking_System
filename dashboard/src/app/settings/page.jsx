@@ -457,7 +457,7 @@ function SettingsInner() {
         <>
           <Section title="Company details">
             <FullRow label="Company name">
-              <input value={profile.name} onChange={e => setProfile(p => ({...p, name:e.target.value}))} placeholder="Ariva Transport" style={inp} disabled={!isAdmin} />
+              <input value={profile.name} onChange={e => setProfile(p => ({...p, name:e.target.value}))} placeholder="Arrival Transport" style={inp} disabled={!isAdmin} />
             </FullRow>
             <FullRow label="City">
               <input value={profile.city} onChange={e => setProfile(p => ({...p, city:e.target.value}))} placeholder="Lagos" style={inp} disabled={!isAdmin} />
@@ -869,7 +869,7 @@ function SettingsInner() {
               )}
               {company?.plan !== 'starter' && (
                 <p style={{ fontSize:13, color:'var(--muted)', lineHeight:1.6 }}>
-                  Your subscription is managed through Paystack. Contact support at <strong>support@ariva.app</strong> to modify or cancel.
+                  Your subscription is managed through Paystack. Contact support at <strong>support@arrival.ai</strong> to modify or cancel.
                 </p>
               )}
             </div>

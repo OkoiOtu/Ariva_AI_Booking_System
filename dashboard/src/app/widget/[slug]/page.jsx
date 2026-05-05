@@ -169,7 +169,7 @@ export default function WidgetPage() {
       </button>
 
       <p style={{ fontSize:11, color:'#9ca3af', textAlign:'center', marginTop:12 }}>
-        Powered by Ariva · By submitting you agree to be contacted via SMS.
+        Powered by Arrival · By submitting you agree to be contacted via SMS.
       </p>
     </form>
   );

@@ -52,7 +52,7 @@ export default function CheckoutCallbackPage() {
         <div style={{ padding:'18px 32px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', position:'relative', zIndex:1 }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, fontFamily:'Syne, sans-serif', fontWeight:800, fontSize:20, color:'#fff', textDecoration:'none' }}>
             <div style={{ width:30, height:30, borderRadius:8, background:'linear-gradient(135deg,#6c63ff,#a78bfa)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>🚗</div>
-            Ariva
+            Arrival
           </Link>
         </div>
 
@@ -122,7 +122,7 @@ export default function CheckoutCallbackPage() {
                     }}>
                       Try again →
                     </Link>
-                    <a href="mailto:hello@ariva.ai" style={{ fontSize:13, color:'rgba(255,255,255,0.4)', textDecoration:'none' }}>
+                    <a href="mailto:hello@arrival.ai" style={{ fontSize:13, color:'rgba(255,255,255,0.4)', textDecoration:'none' }}>
                       Contact support
                     </a>
                   </div>

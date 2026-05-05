@@ -32,7 +32,7 @@ function MethodSelect({ onEmail, onGoogle, googleLoading, googleError }) {
     <>
       <div className="auth-header">
         <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Start your free Ariva trial — no credit card required.</p>
+        <p className="auth-subtitle">Start your free Arrival trial — no credit card required.</p>
       </div>
 
       {googleError && <div className="auth-alert auth-alert-error">{googleError}</div>}
@@ -154,7 +154,7 @@ function EmailForm({ onBack, onSuccess }) {
     <>
       <div className="auth-header">
         <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Start your free Ariva trial</p>
+        <p className="auth-subtitle">Start your free Arrival trial</p>
       </div>
 
       {globalError && <div className="auth-alert auth-alert-error">{globalError}</div>}
@@ -298,7 +298,7 @@ export default function SignupPage() {
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
           <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
-          Ariva
+          Arrival
         </Link>
         <span className="auth-nav-right">
           Have an account? <Link href="/login">Sign in</Link>

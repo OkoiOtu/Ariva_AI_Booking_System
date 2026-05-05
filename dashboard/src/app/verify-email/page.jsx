@@ -26,7 +26,7 @@ export default function VerifyEmailPage() {
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
           <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
-          Ariva
+          Arrival
         </Link>
       </nav>
 
@@ -46,7 +46,7 @@ export default function VerifyEmailPage() {
                 <span className="auth-state-icon" style={{ color: '#10B981' }}><span className="material-symbols-outlined">check_circle</span></span>
                 <h1 className="auth-state-title">Email verified!</h1>
                 <p className="auth-state-body">
-                  Your email has been verified successfully. You can now sign in to your Ariva dashboard.
+                  Your email has been verified successfully. You can now sign in to your Arrival dashboard.
                 </p>
                 <Link href="/login" className="auth-btn auth-btn-primary" style={{ display: 'flex', marginTop: 0 }}>
                   Sign in to dashboard →
