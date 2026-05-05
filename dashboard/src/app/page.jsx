@@ -106,7 +106,7 @@ const PLANS = [
 
 const TESTIMONIALS = [
   {
-    quote: "We were losing 30-40 calls a week to voicemail. Arrival turned those missed calls into £8,000 in new bookings in the first month. It pays for itself a hundred times over.",
+    quote: "We were losing 30-40 calls a week to voicemail. Arrival turned those missed calls into $8,000 in new bookings in the first month. It pays for itself a hundred times over.",
     name: 'Marcus Eze', role: 'Owner, Premier Rides London', avatar: 'ME', rating: 5,
   },
   {
@@ -178,7 +178,7 @@ function ROICalculator() {
   const monthlyROI     = arrivalRecovery - planCost;
   const yearlyLoss     = monthlyLoss * 12;
 
-  const fmt = n => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
+  const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
   return (
     <section className="section roi-section" id="roi-calculator">
@@ -195,7 +195,7 @@ function ROICalculator() {
           <div className="roi-controls">
             {[
               { label: 'Inbound calls per week', value: calls, set: setCalls, min: 5, max: 200, step: 5, format: v => v, rangeL: '5', rangeR: '200+' },
-              { label: 'Average booking value',  value: bookingVal, set: setBookingVal, min: 20, max: 500, step: 5, format: v => `£${v}`, rangeL: '£20', rangeR: '£500' },
+              { label: 'Average booking value',  value: bookingVal, set: setBookingVal, min: 20, max: 500, step: 5, format: v => `$${v}`, rangeL: '$20', rangeR: '$500' },
               { label: 'Calls you currently miss', value: missedPct, set: setMissedPct, min: 5, max: 80, step: 5, format: v => `${v}%`, rangeL: '5%', rangeR: '80%' },
             ].map(({ label, value, set, min, max, step, format, rangeL, rangeR }) => (
               <div key={label} className="roi-slider-group">
@@ -229,7 +229,7 @@ function ROICalculator() {
             </div>
 
             <div className="roi-card roi-card-profit">
-              <div className="roi-card-label">Net monthly profit (after £{planCost}/mo plan)</div>
+              <div className="roi-card-label">Net monthly profit (after ${planCost}/mo plan)</div>
               <div className="roi-card-amount roi-profit-amount">{fmt(monthlyROI)}</div>
               <div className="roi-card-sub">ROI: {Math.round(monthlyROI / planCost)}× your Arrival subscription</div>
             </div>
@@ -413,7 +413,7 @@ export default function LandingPage() {
                   <div className="hero-mockup-stat-row">
                     <div className="hero-mockup-stat"><div className="hm-label">Today</div><div className="hm-val hm-green">12</div></div>
                     <div className="hero-mockup-stat"><div className="hm-label">Active</div><div className="hm-val hm-blue">3</div></div>
-                    <div className="hero-mockup-stat"><div className="hm-label">Revenue</div><div className="hm-val hm-purple">£1,840</div></div>
+                    <div className="hero-mockup-stat"><div className="hm-label">Revenue</div><div className="hm-val hm-purple">$1,840</div></div>
                   </div>
                   <div className="hero-mockup-booking">
                     <div className="hm-booking-row">
@@ -439,7 +439,7 @@ export default function LandingPage() {
               </div>
 
               <FloatingNotif icon="check_circle"         text="SMS sent to customer"   sub="Confirmation + cancel link"  delay={0.8} side="right" style={{ top: '38%' }} />
-              <FloatingNotif icon="call"                 text="New booking — BK-00043" sub="Gatwick → Kensington · £110" delay={2.2} side="right" style={{ top: '64%' }} />
+              <FloatingNotif icon="call"                 text="New booking — BK-00043" sub="Gatwick → Kensington · $110" delay={2.2} side="right" style={{ top: '64%' }} />
               <FloatingNotif icon="notifications_active" text="Admin alerted"          sub="+44 7700 900123"             delay={3.8} side="left"  style={{ top: '55%' }} />
             </div>
           </div>
