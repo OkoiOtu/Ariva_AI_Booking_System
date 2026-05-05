@@ -77,6 +77,7 @@ export default function ForgotPasswordPage() {
                     />
                   </div>
                   <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                    {loading && <span className="auth-btn-spinner" />}
                     {loading ? 'Sending…' : 'Send reset link →'}
                   </button>
                 </form>

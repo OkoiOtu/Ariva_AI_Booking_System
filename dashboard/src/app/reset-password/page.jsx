@@ -140,6 +140,7 @@ export default function ResetPasswordPage() {
                     className="auth-btn auth-btn-primary"
                     disabled={loading || !token}
                   >
+                    {loading && <span className="auth-btn-spinner" />}
                     {loading ? 'Updating…' : 'Update password →'}
                   </button>
                 </form>

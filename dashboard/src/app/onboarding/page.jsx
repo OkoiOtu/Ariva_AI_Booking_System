@@ -196,6 +196,7 @@ export default function OnboardingPage() {
                 disabled={submitting}
                 style={{ marginTop: 24 }}
               >
+                {submitting && <span className="auth-btn-spinner" />}
                 {submitting ? 'Setting up…' : 'Launch my dashboard →'}
               </button>
             </form>

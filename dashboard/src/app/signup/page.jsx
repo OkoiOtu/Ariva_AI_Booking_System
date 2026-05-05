@@ -211,6 +211,7 @@ function EmailForm({ onBack, onSuccess }) {
         </div>
 
         <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+          {loading && <span className="auth-btn-spinner" />}
           {loading ? 'Creating account…' : 'Create account →'}
         </button>
       </form>

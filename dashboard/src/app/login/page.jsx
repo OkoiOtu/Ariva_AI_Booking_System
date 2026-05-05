@@ -170,6 +170,7 @@ export default function LoginPage() {
                 className="auth-btn auth-btn-primary"
                 disabled={loading || isLocked}
               >
+                {loading && <span className="auth-btn-spinner" />}
                 {loading ? 'Signing in…' : isLocked ? '🔒 Account locked' : 'Sign in →'}
               </button>
             </form>
