@@ -235,7 +235,7 @@ function VerifyScreen({ email, onResend }) {
 
   return (
     <div className="auth-state">
-      <span className="auth-state-icon">📧</span>
+      <span className="auth-state-icon"><i className="fa-solid fa-envelope" /></span>
       <h2 className="auth-state-title">Check your inbox</h2>
       <p className="auth-state-body">
         We sent a verification link to<br />
@@ -249,7 +249,7 @@ function VerifyScreen({ email, onResend }) {
       </Link>
       <div className="auth-resend-row" style={{ marginTop: 18 }}>
         <button className={`auth-btn-link${resent ? ' auth-btn-link-green' : ''}`} onClick={handleResend}>
-          {resent ? '✓ Resent!' : "Didn't get it? Resend"}
+          {resent ? <><i className="fa-solid fa-check" style={{ marginRight: 5 }} />Resent!</> : "Didn't get it? Resend"}
         </button>
       </div>
       <p className="auth-helper" style={{ textAlign: 'center', marginTop: 10 }}>
@@ -297,7 +297,7 @@ export default function SignupPage() {
 
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
-          <div className="auth-nav-logo-icon">✈</div>
+          <div className="auth-nav-logo-icon"><i className="fa-solid fa-paper-plane" /></div>
           Ariva
         </Link>
         <span className="auth-nav-right">

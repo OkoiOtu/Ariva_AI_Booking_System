@@ -108,7 +108,7 @@ export default function OnboardingPage() {
 
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
-          <div className="auth-nav-logo-icon">✈</div>
+          <div className="auth-nav-logo-icon"><i className="fa-solid fa-paper-plane" /></div>
           Ariva
         </Link>
       </nav>
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
         <div className="auth-wrap" style={{ maxWidth: 480 }}>
           <div className="auth-card">
             <div className="auth-header">
-              <span className="auth-icon">🏢</span>
+              <span className="auth-icon"><i className="fa-solid fa-building" /></span>
               <h1 className="auth-title">Set up your company</h1>
               <p className="auth-subtitle">
                 Welcome{user.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}! Tell us about your business to finish setting up Ariva.

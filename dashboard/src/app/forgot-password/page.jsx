@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
 
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
-          <div className="auth-nav-logo-icon">✈</div>
+          <div className="auth-nav-logo-icon"><i className="fa-solid fa-paper-plane" /></div>
           Ariva
         </Link>
       </nav>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
           <div className="auth-card">
             {sent ? (
               <div className="auth-state">
-                <span className="auth-state-icon">📬</span>
+                <span className="auth-state-icon"><i className="fa-solid fa-envelope-open-text" /></span>
                 <h1 className="auth-state-title">Check your inbox</h1>
                 <p className="auth-state-body">
                   If an account exists for <strong>{email}</strong>, we sent a password reset link.

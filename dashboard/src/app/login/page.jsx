@@ -113,7 +113,7 @@ export default function LoginPage() {
 
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
-          <div className="auth-nav-logo-icon">✈</div>
+          <div className="auth-nav-logo-icon"><i className="fa-solid fa-paper-plane" /></div>
           Ariva
         </Link>
         <span className="auth-nav-right">
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 disabled={loading || isLocked}
               >
                 {loading && <span className="auth-btn-spinner" />}
-                {loading ? 'Signing in…' : isLocked ? '🔒 Account locked' : 'Sign in →'}
+                {loading ? 'Signing in…' : isLocked ? <><i className="fa-solid fa-lock" style={{ marginRight: 6 }} />Account locked</> : 'Sign in →'}
               </button>
             </form>
 

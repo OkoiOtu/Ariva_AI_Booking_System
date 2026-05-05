@@ -108,7 +108,8 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
+  color: #fff;
 }
 .auth-nav-right { font-size: 13px; color: var(--auth-muted); }
 .auth-nav-right a { color: var(--auth-accent); font-weight: 500; transition: color 0.2s; }
@@ -157,9 +158,11 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 /* ─── Card header ─────────────────────────────────────────────────────────── */
 .auth-header { margin-bottom: 28px; }
 .auth-icon {
-  font-size: 40px;
+  font-size: 38px;
   margin-bottom: 16px;
   display: block;
+  color: var(--auth-accent);
+  line-height: 1;
   animation: authCardIn 0.45s 0.08s both;
 }
 .auth-title {
@@ -425,7 +428,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 
 /* ─── State pages (verify, success, error) ────────────────────────────────── */
 .auth-state { text-align: center; }
-.auth-state-icon { font-size: 52px; margin-bottom: 18px; display: block; }
+.auth-state-icon { font-size: 52px; margin-bottom: 18px; display: block; color: var(--auth-accent); line-height: 1; }
 .auth-state-title {
   font-family: var(--auth-font);
   font-size: 22px;
