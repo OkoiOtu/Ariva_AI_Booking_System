@@ -327,8 +327,9 @@ img, svg { display: block; max-width: 100%; }
 .hero-visual {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: var(--space-6);
 }
 
 .hero-mockup {
@@ -340,6 +341,7 @@ img, svg { display: block; max-width: 100%; }
   border: 1px solid var(--color-border);
   overflow: hidden;
   animation: float 6s ease-in-out infinite;
+  margin-top: 16px;
 }
 
 .hero-mockup-bar {
