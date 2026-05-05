@@ -426,6 +426,26 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 }
 .auth-logo-remove:hover { color: var(--auth-red); }
 
+/* ─── Material Symbols overrides for auth pages ───────────────────────────── */
+/* Icon inside the gradient nav logo badge */
+.auth-nav-logo-icon .material-symbols-outlined {
+  font-size: 17px !important;
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  color: #fff;
+}
+/* Large state icons and card header icons — filled variant, inherits parent color */
+.auth-state-icon .material-symbols-outlined,
+.auth-icon .material-symbols-outlined {
+  font-size: inherit !important;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+  color: inherit;
+}
+/* Inline icons inside buttons — sized to match button text */
+.auth-btn .material-symbols-outlined {
+  font-size: 18px !important;
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
 /* ─── State pages (verify, success, error) ────────────────────────────────── */
 .auth-state { text-align: center; }
 .auth-state-icon { font-size: 52px; margin-bottom: 18px; display: block; color: var(--auth-accent); line-height: 1; }

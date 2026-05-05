@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
 
       <nav className="auth-nav">
         <Link href="/" className="auth-nav-logo">
-          <div className="auth-nav-logo-icon"><i className="fa-solid fa-paper-plane" /></div>
+          <div className="auth-nav-logo-icon"><span className="material-symbols-outlined">flight_takeoff</span></div>
           Ariva
         </Link>
       </nav>
@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
           <div className="auth-card">
             {done ? (
               <div className="auth-state">
-                <span className="auth-state-icon" style={{ color: '#10B981' }}><i className="fa-solid fa-circle-check" /></span>
+                <span className="auth-state-icon" style={{ color: '#10B981' }}><span className="material-symbols-outlined">check_circle</span></span>
                 <h1 className="auth-state-title">Password updated!</h1>
                 <p className="auth-state-body">
                   Your password has been changed successfully. You can now sign in with your new password.
