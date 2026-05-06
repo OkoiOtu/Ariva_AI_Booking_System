@@ -25,13 +25,12 @@ function Toggle({ on, onToggle }) {
 
 function CheckPill({ label, checked, onToggle }) {
   return (
-    <label className={`wizard-check${checked ? ' checked' : ''}`} onClick={onToggle}>
-      <input type="checkbox" readOnly checked={checked} />
+    <div className={`wizard-check${checked ? ' checked' : ''}`} onClick={onToggle}>
       <span className="wizard-check-box">
         <span className="material-symbols-outlined">check</span>
       </span>
       <span className="wizard-check-label">{label}</span>
-    </label>
+    </div>
   );
 }
 
@@ -46,12 +45,12 @@ const STEPS = [
 const SERVICE_TYPES = [
   'Airport transfers', 'Corporate travel', 'Wedding hire',
   'Day tours', 'Event transport', 'Intercity rides',
-  'School runs', 'Medical transport',
+  'School runs', 'Medical transport', 'Other',
 ];
 
 const VEHICLE_TYPES = [
   'Saloon', 'SUV / 4x4', 'MPV', 'Minibus',
-  'Coach', 'Luxury / Limo', 'Electric',
+  'Coach', 'Luxury / Limo', 'Electric', 'Other',
 ];
 
 const TIMEZONES = [
@@ -207,6 +206,9 @@ function Step2({ data, setData, errors }) {
     });
   }
 
+  const serviceOther  = (data.serviceTypes ?? []).includes('Other');
+  const vehicleOther  = (data.vehicleTypes ?? []).includes('Other');
+
   return (
     <>
       <p className="wizard-section-label">Services you offer</p>
@@ -217,6 +219,12 @@ function Step2({ data, setData, errors }) {
             onToggle={() => toggleSet('serviceTypes', s)} />
         ))}
       </div>
+      {serviceOther && (
+        <input className="wizard-input" style={{ marginTop: 10 }}
+          value={data.otherServiceText ?? ''}
+          onChange={e => setData(p => ({ ...p, otherServiceText: e.target.value }))}
+          placeholder="Describe your other service(s)…" />
+      )}
       {errors.serviceTypes && <p className="wizard-field-error" style={{ marginTop:8 }}>{errors.serviceTypes}</p>}
 
       <p className="wizard-section-label">Vehicle types in your fleet</p>
@@ -227,6 +235,12 @@ function Step2({ data, setData, errors }) {
             onToggle={() => toggleSet('vehicleTypes', v)} />
         ))}
       </div>
+      {vehicleOther && (
+        <input className="wizard-input" style={{ marginTop: 10 }}
+          value={data.otherVehicleText ?? ''}
+          onChange={e => setData(p => ({ ...p, otherVehicleText: e.target.value }))}
+          placeholder="Describe your other vehicle type(s)…" />
+      )}
       {errors.vehicleTypes && <p className="wizard-field-error" style={{ marginTop:8 }}>{errors.vehicleTypes}</p>}
 
       <p className="wizard-section-label">Fleet size & coverage</p>
@@ -422,7 +436,8 @@ const INITIAL = {
   // Step 1
   companyName: '', dbaName: '', slug: '', city: '', phone: '', website: '', brandColor: '#7c5aed',
   // Step 2
-  serviceTypes: [], vehicleTypes: [], fleetSize: '', timezone: '', operatingArea: '',
+  serviceTypes: [], vehicleTypes: [], otherServiceText: '', otherVehicleText: '',
+  fleetSize: '', timezone: '', operatingArea: '',
   // Step 3
   pricingModel: '', currency: '', baseRate: '', is247: true,
   weekdayStart: '08:00', weekdayEnd: '20:00', weekendStart: '09:00', weekendEnd: '18:00',
@@ -489,6 +504,15 @@ export default function OnboardingPage() {
     setSubmitting(true); setGlobalError('');
     try {
       const token = pb.authStore.token;
+      // Resolve "Other" entries to the custom text the user typed
+      const resolveOther = (arr, customText) => {
+        const filtered = arr.filter(v => v !== 'Other');
+        if (arr.includes('Other') && customText.trim()) filtered.push(customText.trim());
+        return filtered;
+      };
+      const finalServices = resolveOther(data.serviceTypes, data.otherServiceText);
+      const finalVehicles = resolveOther(data.vehicleTypes, data.otherVehicleText);
+
       const payload = {
         companyName:   data.companyName.trim(),
         slug:          data.slug.trim(),
@@ -497,8 +521,8 @@ export default function OnboardingPage() {
         dbaName:       data.dbaName.trim(),
         website:       data.website.trim(),
         brandColor:    data.brandColor,
-        serviceTypes:  JSON.stringify(data.serviceTypes),
-        vehicleTypes:  JSON.stringify(data.vehicleTypes),
+        serviceTypes:  JSON.stringify(finalServices),
+        vehicleTypes:  JSON.stringify(finalVehicles),
         fleetSize:     data.fleetSize ? Number(data.fleetSize) : null,
         timezone:      data.timezone,
         operatingArea: data.operatingArea.trim(),
