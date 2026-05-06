@@ -439,6 +439,12 @@
   color: #f87171;
 }
 
+.wizard-alert-info {
+  background: rgba(96, 165, 250, 0.08);
+  border: 0.5px solid rgba(96, 165, 250, 0.25);
+  color: rgba(255,255,255,0.6);
+}
+
 /* Color swatch picker */
 .wizard-color-row {
   display: flex;

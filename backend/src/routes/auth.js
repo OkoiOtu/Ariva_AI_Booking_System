@@ -125,11 +125,21 @@ router.post('/setup-company', async (req, res) => {
     const pb = await getClient();
     const {
       companyName, slug, city, phone,
-      dbaName, website, brandColor,
+      // Identity
+      dbaName, logoUrl, brandColor,
+      addressLine1, addressLine2, state, country, postalCode, website,
+      socialInstagram, socialLinkedin, socialTwitter, socialFacebook,
+      // Fleet
       serviceTypes, vehicleTypes, fleetSize, timezone, operatingArea,
+      // Compliance
+      taxId, operatingAuthority, insuranceProvider, insuranceCoverage, insuranceExpiry,
+      bankName, bankAccountName, bankAccountNumber,
+      // Pricing
       pricingModel, currency, baseRate, is247,
       weekdayStart, weekdayEnd, weekendStart, weekendEnd,
-      contactName, contactPhone, contactEmail, alertEmail, alertSms,
+      // Admin
+      contactName, contactPhone, contactEmail,
+      numDispatchers, numDrivers, alertEmail, alertSms, webhookUrl,
     } = req.body;
 
     if (!companyName || !slug) {
@@ -159,28 +169,54 @@ router.post('/setup-company', async (req, res) => {
 
     // Extended wizard fields — added only if defined so missing PocketBase fields don't fail
     const extended = {
-      dba_name:       dbaName       || undefined,
-      website:        website       || undefined,
-      brand_color:    brandColor    || undefined,
-      service_types:  serviceTypes  || undefined,
-      vehicle_types:  vehicleTypes  || undefined,
-      fleet_size:     fleetSize     ?? undefined,
-      timezone:       timezone      || undefined,
-      operating_area: operatingArea || undefined,
-      pricing_model:  pricingModel  || undefined,
-      currency:       currency      || undefined,
-      base_rate:      baseRate      ?? undefined,
-      is_24_7:        is247         ?? undefined,
-      weekday_start:  weekdayStart  || undefined,
-      weekday_end:    weekdayEnd    || undefined,
-      weekend_start:  weekendStart  || undefined,
-      weekend_end:    weekendEnd    || undefined,
-      contact_name:   contactName   || undefined,
-      contact_phone:  contactPhone  || undefined,
-      contact_email:  contactEmail  || undefined,
-      alert_email:    alertEmail    ?? undefined,
-      alert_sms:      alertSms      ?? undefined,
-      setup_completed: true,
+      // Identity & Brand
+      dba_name:          dbaName          || undefined,
+      logo_url:          logoUrl          || undefined,
+      brand_color:       brandColor       || undefined,
+      address_line1:     addressLine1     || undefined,
+      address_line2:     addressLine2     || undefined,
+      state:             state            || undefined,
+      country:           country          || undefined,
+      postal_code:       postalCode       || undefined,
+      website:           website          || undefined,
+      social_instagram:  socialInstagram  || undefined,
+      social_linkedin:   socialLinkedin   || undefined,
+      social_twitter:    socialTwitter    || undefined,
+      social_facebook:   socialFacebook   || undefined,
+      // Fleet & Services
+      service_types:     serviceTypes     || undefined,
+      vehicle_types:     vehicleTypes     || undefined,
+      fleet_size:        fleetSize        ?? undefined,
+      timezone:          timezone         || undefined,
+      operating_area:    operatingArea    || undefined,
+      // Compliance & Legal
+      tax_id:                taxId                || undefined,
+      operating_authority:   operatingAuthority   || undefined,
+      insurance_provider:    insuranceProvider    || undefined,
+      insurance_coverage:    insuranceCoverage    ?? undefined,
+      insurance_expiry:      insuranceExpiry      || undefined,
+      bank_name:             bankName             || undefined,
+      bank_account_name:     bankAccountName      || undefined,
+      bank_account_number:   bankAccountNumber    || undefined,
+      // Pricing & Hours
+      pricing_model:     pricingModel     || undefined,
+      currency:          currency         || undefined,
+      base_rate:         baseRate         ?? undefined,
+      is_24_7:           is247            ?? undefined,
+      weekday_start:     weekdayStart     || undefined,
+      weekday_end:       weekdayEnd       || undefined,
+      weekend_start:     weekendStart     || undefined,
+      weekend_end:       weekendEnd       || undefined,
+      // Admin & Alerts
+      contact_name:      contactName      || undefined,
+      contact_phone:     contactPhone     || undefined,
+      contact_email:     contactEmail     || undefined,
+      num_dispatchers:   numDispatchers   ?? undefined,
+      num_drivers:       numDrivers       ?? undefined,
+      alert_email:       alertEmail       ?? undefined,
+      alert_sms:         alertSms         ?? undefined,
+      webhook_url:       webhookUrl       || undefined,
+      setup_completed:   true,
     };
 
     // Merge only defined extended fields
