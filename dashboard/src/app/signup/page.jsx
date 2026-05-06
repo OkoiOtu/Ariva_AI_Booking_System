@@ -77,12 +77,13 @@ function MethodSelect({ onEmail, onGoogle, googleLoading, googleError }) {
 
 /* ─── Email signup form ───────────────────────────────────────────────────── */
 function EmailForm({ onBack, onSuccess }) {
-  const [name,     setName]     = useState('');
-  const [username, setUsername] = useState('');
-  const [email,    setEmail]    = useState('');
-  const [pass,     setPass]     = useState('');
-  const [errors,   setErrors]   = useState({});
-  const [loading,  setLoading]  = useState(false);
+  const [name,        setName]        = useState('');
+  const [username,    setUsername]    = useState('');
+  const [email,       setEmail]       = useState('');
+  const [pass,        setPass]        = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [errors,      setErrors]      = useState({});
+  const [loading,     setLoading]     = useState(false);
   const [globalError, setGlobalError] = useState('');
 
   const [emailChecking,    setEmailChecking]    = useState(false);
@@ -129,8 +130,10 @@ function EmailForm({ onBack, onSuccess }) {
     else if (errors.username)           errs.username = errors.username;
     if (!email.includes('@'))           errs.email    = 'Enter a valid email address';
     else if (errors.email)              errs.email    = errors.email;
-    if (pass.length < 8)                errs.pass     = 'Password must be at least 8 characters';
-    if (strength.score < 2)             errs.pass     = 'Password is too weak — ' + (strength.tips[0] ?? 'choose a stronger one');
+    if (pass.length < 8)                errs.pass        = 'Password must be at least 8 characters';
+    if (strength.score < 2)             errs.pass        = 'Password is too weak — ' + (strength.tips[0] ?? 'choose a stronger one');
+    if (!confirmPass)                   errs.confirmPass = 'Please confirm your password';
+    else if (pass !== confirmPass)      errs.confirmPass = 'Passwords do not match';
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true); setGlobalError('');
@@ -205,9 +208,26 @@ function EmailForm({ onBack, onSuccess }) {
         <div className="auth-field">
           <label className="auth-label">Password <span className="auth-label-required">*</span></label>
           <input type="password" className={`auth-input${errors.pass ? ' auth-input-err' : ''}`}
-            value={pass} onChange={e => setPass(e.target.value)} placeholder="Create a strong password" />
+            value={pass} onChange={e => { setPass(e.target.value); if (errors.pass) setErrors(p => ({ ...p, pass: '' })); }}
+            placeholder="Create a strong password" />
           <PasswordStrengthBar password={pass} />
           {errors.pass && <p className="auth-field-error">{errors.pass}</p>}
+        </div>
+
+        {/* Confirm password */}
+        <div className="auth-field">
+          <label className="auth-label">Confirm password <span className="auth-label-required">*</span></label>
+          <input type="password" className={`auth-input${errors.confirmPass ? ' auth-input-err' : ''}`}
+            value={confirmPass}
+            onChange={e => { setConfirmPass(e.target.value); if (errors.confirmPass) setErrors(p => ({ ...p, confirmPass: '' })); }}
+            placeholder="Re-enter your password" />
+          {errors.confirmPass
+            ? <p className="auth-field-error">{errors.confirmPass}</p>
+            : confirmPass && pass === confirmPass && <p className="auth-helper" style={{ color: '#4ade80' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 13, verticalAlign: 'middle', marginRight: 3 }}>check_circle</span>
+                Passwords match
+              </p>
+          }
         </div>
 
         <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
@@ -273,7 +293,7 @@ export default function SignupPage() {
     setGoogleLoading(true); setGoogleError('');
     try {
       await loginWithGoogle();
-      router.replace('/onboarding');
+      router.replace('/dashboard');
     } catch (err) {
       setGoogleError(err.message ?? 'Google sign-in failed. Please try again.');
     } finally {

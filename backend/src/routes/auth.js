@@ -123,7 +123,14 @@ router.post('/setup-company', async (req, res) => {
     }
 
     const pb = await getClient();
-    const { companyName, slug, city, phone } = req.body;
+    const {
+      companyName, slug, city, phone,
+      dbaName, website, brandColor,
+      serviceTypes, vehicleTypes, fleetSize, timezone, operatingArea,
+      pricingModel, currency, baseRate, is247,
+      weekdayStart, weekdayEnd, weekendStart, weekendEnd,
+      contactName, contactPhone, contactEmail, alertEmail, alertSms,
+    } = req.body;
 
     if (!companyName || !slug) {
       return res.status(400).json({ error: 'companyName and slug are required.' });
@@ -137,18 +144,51 @@ router.post('/setup-company', async (req, res) => {
       if (existing) return res.status(409).json({ error: 'This company slug is already taken.' });
     } catch { /* good */ }
 
-    const company = await pb.collection('companies').create({
+    const companyData = {
       name:               companyName,
       slug,
-      city:               city  ?? '',
-      phone:              phone ?? '',
+      city:               city         ?? '',
+      phone:              phone        ?? '',
       plan:               'starter',
       active:             true,
       ai_ask_email:       true,
       ai_ask_flight:      true,
       ai_ask_special_req: true,
       ai_quote_prices:    true,
-    }, { requestKey: null });
+    };
+
+    // Extended wizard fields — added only if defined so missing PocketBase fields don't fail
+    const extended = {
+      dba_name:       dbaName       || undefined,
+      website:        website       || undefined,
+      brand_color:    brandColor    || undefined,
+      service_types:  serviceTypes  || undefined,
+      vehicle_types:  vehicleTypes  || undefined,
+      fleet_size:     fleetSize     ?? undefined,
+      timezone:       timezone      || undefined,
+      operating_area: operatingArea || undefined,
+      pricing_model:  pricingModel  || undefined,
+      currency:       currency      || undefined,
+      base_rate:      baseRate      ?? undefined,
+      is_24_7:        is247         ?? undefined,
+      weekday_start:  weekdayStart  || undefined,
+      weekday_end:    weekdayEnd    || undefined,
+      weekend_start:  weekendStart  || undefined,
+      weekend_end:    weekendEnd    || undefined,
+      contact_name:   contactName   || undefined,
+      contact_phone:  contactPhone  || undefined,
+      contact_email:  contactEmail  || undefined,
+      alert_email:    alertEmail    ?? undefined,
+      alert_sms:      alertSms      ?? undefined,
+      setup_completed: true,
+    };
+
+    // Merge only defined extended fields
+    Object.entries(extended).forEach(([k, v]) => {
+      if (v !== undefined) companyData[k] = v;
+    });
+
+    const company = await pb.collection('companies').create(companyData, { requestKey: null });
 
     // Link user to company and confirm their role
     await pb.collection('users').update(callerRecord.id, {
@@ -164,6 +204,41 @@ router.post('/setup-company', async (req, res) => {
   } catch (err) {
     console.error('[auth/setup-company] error:', err.message);
     res.status(500).json({ error: err.message ?? 'Company setup failed. Please try again.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /auth/complete-tour
+// Marks the authenticated user as having completed the product tour.
+// Auth: requires a valid PocketBase user token in Authorization: Bearer <token>
+// ---------------------------------------------------------------------------
+router.post('/complete-tour', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '').trim();
+  if (!token) return res.status(401).json({ error: 'Authentication required.' });
+
+  try {
+    const { default: PocketBase } = await import('pocketbase');
+    const userPb = new PocketBase(process.env.POCKETBASE_URL);
+    userPb.authStore.save(token, null);
+    let callerRecord;
+    try {
+      const auth = await userPb.collection('users').authRefresh({ requestKey: null });
+      callerRecord = auth.record;
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired session.' });
+    }
+
+    const pb = await getClient();
+    try {
+      await pb.collection('users').update(callerRecord.id, { tour_completed: true }, { requestKey: null });
+    } catch {
+      // Field may not exist yet — silently ignore
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[auth/complete-tour] error:', err.message);
+    res.status(500).json({ error: 'Could not mark tour as complete.' });
   }
 });
 

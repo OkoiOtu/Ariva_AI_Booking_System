@@ -292,9 +292,15 @@ function Shell({ children }) {
     if (user && pathname.startsWith('/signup')) {
       router.replace('/dashboard');
     }
-    // New users who authenticated (Google or email) but haven't set up a company yet.
-    if (user && !user.company_id && !pathname.startsWith('/onboarding')) {
-      router.replace('/onboarding');
+    // New users who authenticated but haven't set up a company yet.
+    // Flow: /dashboard (tour) → /onboarding (wizard) → dashboard
+    if (user && !user.company_id) {
+      const tourDone = typeof window !== 'undefined' && localStorage.getItem(`tour_${user.id}`) === '1';
+      if (tourDone && !pathname.startsWith('/onboarding')) {
+        router.replace('/onboarding');
+      } else if (!tourDone && pathname !== '/dashboard') {
+        router.replace('/dashboard');
+      }
     }
   }, [user, loading, isPublic, pathname, router]);
 
